@@ -31,10 +31,5 @@
     // listing-index: (enabled: true),
 )
 
-#import "sections/signal_modelling.typ": *
-#import "sections/deterministic_model_identification.typ": *
-
-#section_signal_modelling()
-
-#pagebreak()
-#section_deterministic_model_identification()
+#include "sections/signal_modelling.typ"
+#include "sections/deterministic_model_identification.typ"

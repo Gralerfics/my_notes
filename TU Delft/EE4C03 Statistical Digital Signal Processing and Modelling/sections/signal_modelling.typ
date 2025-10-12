@@ -1,7 +1,6 @@
-// #import "@preview/cetz:0.4.2"
-#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#import "../generic.typ": *
 
-#let section_signal_modelling() = {[
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
 = Signal Modelling
 
@@ -130,5 +129,3 @@ $ y[n] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
 我们可以选择使用均值为 $0$、方差为 $sigma_v^2$ 的白噪声 $v[n]$ 作为输入信号。这样做的依据是其自相关函数为 $r_v [k] = sigma_v^2 delta[k]$，对其进行傅里叶变换得其功率谱密度为常数 $P_v (omega) = sigma_v^2$，即在所有频率上均有相同的能量分布。
 
 这样的特性保证了我们可以通过对其进行滤波得到任意频率特性的输出信号 $hat(x)[n]$，同时任意频率成分能量均匀，使得输出信号的统计特征与输入信号无关。
-
-]}

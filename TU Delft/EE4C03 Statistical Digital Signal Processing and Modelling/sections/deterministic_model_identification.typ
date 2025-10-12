@@ -1,8 +1,7 @@
-#import "@preview/ilm:1.4.1": *
+#import "../generic.typ": *
 
+#import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
-
-#let section_deterministic_model_identification() = {[
 
 = Deterministic Modelling Identification
 
@@ -63,8 +62,6 @@ $
 
 == From a More Formalised Perspective
 
-// 上一节将问题直接视为优化问题处理，这里我们更直接地令误差为零，大概率直接得到一个超定（Overdetermined）的方程组，然后再通过伪逆来求最优解。这本质上还是最小二乘法，但将显性的求最小化优化问题的过程，转化为隐性的将理想解投影到可行参数空间的过程，让前面的思路更加直接一些。或者也可以说，
-
 这一节从形式化的角度来理解，对应上一节中系统框图的变化。
 
 首先再次明确目标，我们已知 $x[n]$，希望求解最优的 $a[n]$ 和 $b[n]$，使得模型输出 $hat(x)[n]$ 尽可能接近 $x[n]$；同时，为了方便求解，我们希望问题是线性的。也就是说，我们希望得到一个直接包含 $a[n]$、$b[n]$ 和 $x[n]$ 的线性方程组。
@@ -79,22 +76,72 @@ $ h[n] + sum_(k=1)^p a[k] h[n-k] = b[n] $
 
 前面说了，我们希望使误差直接为零，所以带入 $h[n] = x[n]$，得到：
 
-$ x[n] + sum_(k=1)^p a[k] x[n-k] = b[n] $
+$ x[n] + sum_(k=1)^p a[k] x[n-k] = b[n] $ <equ:deterministic_model_identification_equation>
 
 这就是我们想要的线性方程组了，包含了 $a[n]$、$b[n]$ 和 $x[n]$。但该方程组中未知数的个数是 $p + q + 1$，而方程的个数是无穷多个（实际上取决于信号的长度，系数均为零的等式就无意义了），所以该方程组是一个超定（Overdetermined）方程组。
 
 #blockquote[
     上一节中应用最小二乘法将问题视为优化问题处理，而这里我们更直接地令误差为零，得到一个超定方程组。
 
-    对后者我们可以通过伪逆来求最优解，这本质上还是最小二乘法，但将显性的求最小化优化问题的过程，转化为隐性的、公式化的将理想解投影到可行解空间的过程，让前面的思路更加直接一些。
+    对后者我们可以通过伪逆来求最优解，这本质上还是最小二乘法，但将显性的求最小化优化问题的过程，转化为隐性的、公式化的将理想解投影到可行解空间的过程，让前面的思路更加清晰一些。
 ]
 
-// 我们写出 $hat(b)[n]$ 的表达式：
+当然，我们也可以直接从 @fig:deterministic_model_identification_diagram_ls 中的系统出发列出方程组。写出 $hat(b)[n]$ 的表达式：
 
-// $ hat(b)[n] =  $
+$ hat(b)[n] = x[n] + sum_(k=1)^p a[k] x[n-k] $
 
-// 我们直接令 $e[n] = 0$，列出方程组：
+直接令 $e[n] = 0$ 即 $hat(b)[n] = b[n]$，得到和 @equ:deterministic_model_identification_equation 一样的方程组，这里属于废话了。
 
 == Pade Approximation
 
-]}
+接下来就是对 @equ:deterministic_model_identification_equation 的求解了。对该方程组的求解方法中 Pade Approximation 是最简单的一种，只取 $n = 0, 1, ..., p + q$，得到前 $p + q + 1$ 个方程，和未知数个数相同，非奇异的话刚好可以求解出唯一解。
+
+清晰一点，我们把矩阵画出来：
+
+#let pade_matrix = [$
+mat(
+    delim: "[",
+    column-gap: #0.7em,
+    row-gap: #0.4em,
+    x[0], 0, 0, dots, 0;
+    x[1], x[0], 0, dots, 0;
+    x[2], x[1], x[0], dots, 0;
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[p], x[p-1], x[p-2], dots, x[0];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[q], x[q-1], x[q-2], dots, x[q-p];
+    x[q+1], x[q], x[q-1], dots, x[q-p+1];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[q+p], x[q+p-1], x[q+p-2], dots, x[q];
+)
+mat(
+    delim: "[",
+    row-gap: #0.4em,
+    1; // a[0] = 1;
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+mat(
+    delim: "[",
+    row-gap: #0.4em,
+    b[0];
+    b[1];
+    b[2];
+    dots.v;
+    b[p];
+    dots.v;
+    b[q];
+    0;
+    dots.v;
+    0;
+)
+$ <equ:deterministic_model_identification_equation_matrix_pade>]
+
+
+
+TODO
+
+但显然 Pade 存在一系列问题：
