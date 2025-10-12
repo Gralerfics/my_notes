@@ -32,8 +32,8 @@
 
 $
 cases(
-    frac(partial cal(E)_"LS", partial a^*[k]) = 0\, k = 1\, 2\, ...\, p,
-    frac(partial cal(E)_"LS", partial b^*[k]) = 0\, k = 0\, 1\, ...\, q
+    frac(partial cal(E)_"LS", partial a^*[k]) = 0\, quad quad & k = 1\, 2\, ...\, p,
+    frac(partial cal(E)_"LS", partial b^*[k]) = 0\, & k = 0\, 1\, ...\, q
 )
 $
 
@@ -284,20 +284,30 @@ $ dash(bold(a)) = - (text(fill: #blue, bold(X)_q^H bold(X)_q))^(-1) text(fill: #
 显然，上节中我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有原因的。首先，我们画出 $bold(R)_x$ 的计算过程：
 
 $
-bold(R)_x = // bold(X)_q^H bold(X)_q =
-mat(
-    delim: "[",
-    x^*[q], dots, x^*[q+p-1], dots;
-    x^*[q-1], dots, x^*[q+p-2], dots;
-    dots.v, dots.down, dots.v, dots.down;
-    x^*[q-p+1], dots, x^*[q], dots;
-)
-mat(
-    delim: "[",
-    x[q], x[q-1], dots, x[q-p+1];
-    dots.v, dots.v, dots.down, dots.v;
-    x[q+p-1], x[q+p-2], dots, x[q];
-    dots.v, dots.v, dots.down, dots.v;
+inline(
+    bold(R)_x
+    &=
+    bold(X)_q^H bold(X)_q \
+    &=
+    mat(
+        delim: "[",
+        x^*[q], dots, x^*[q+p-1], dots;
+        x^*[q-1], dots, x^*[q+p-2], dots;
+        dots.v, dots.down, dots.v, dots.down;
+        x^*[q-p+1], dots, x^*[q], dots;
+    )
+    mat(
+        delim: "[",
+        x[q], x[q-1], dots, x[q-p+1];
+        dots.v, dots.v, dots.down, dots.v;
+        x[q+p-1], x[q+p-2], dots, x[q];
+        dots.v, dots.v, dots.down, dots.v;
+    ) \
+    &=
+    mat(
+        delim: "[",
+        
+    )
 )
 $ <equ:deterministic_model_identification_matrix_prony>
 
