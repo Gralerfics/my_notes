@@ -58,7 +58,7 @@ $
     )
 ] <fig:deterministic_model_identification_diagram_ls>
 
-具体地，单位脉冲信号经过 $B(z)$ 得到的输出就是 $b[n]$，将其与用目标信号 $x[n]$ 经过 $A(z)$ 得到的 $hat(b)[n]$（此时可视为是对系数序列 $b[n]$ 的估计）作差，得到新的误差。经过这样操作后的方程求解就是线性的了，Pade Approximation、Prony's Method 和 Shank's Method 都是基于该思路的技术。
+具体地，单位脉冲信号经过 $B(z)$ 得到的输出就是 $b[n]$，将其与用目标信号 $x[n]$ 经过 $A(z)$ 得到的 $hat(b)[n]$（此时可视为是对系数序列 $b[n]$ 的估计）作差，得到新的误差。经过这样操作后的方程求解就是线性的了，Padé Approximation、Prony's Method 和 Shank's Method 都是基于该思路的技术。
 
 == From a More Formalised Perspective
 
@@ -92,9 +92,9 @@ $ hat(b)[n] = x[n] + sum_(k=1)^p a[k] x[n-k] $
 
 直接令 $e[n] = 0$ 即 $hat(b)[n] = b[n]$，得到和 @equ:deterministic_model_identification_equation 一样的方程组，这里属于废话了。
 
-== Pade Approximation
+== Padé Approximation
 
-接下来就是对 @equ:deterministic_model_identification_equation 的求解了。对该方程组的求解方法中 Pade Approximation 是最简单的一种，只取 $n = 0, 1, ..., p + q$，得到前 $p + q + 1$ 个方程，和未知数个数相同，非奇异的话刚好可以求解出唯一解。
+接下来就是对 @equ:deterministic_model_identification_equation 的求解了。对该方程组的求解方法中 Padé Approximation 是最简单的一种，只取 $n = 0, 1, ..., p + q$，得到前 $p + q + 1$ 个方程，和未知数个数相同，非奇异的话刚好可以求解出唯一解。
 
 清晰一点，我们把矩阵画出来：
 
@@ -102,7 +102,7 @@ $ hat(b)[n] = x[n] + sum_(k=1)^p a[k] x[n-k] $
 mat(
     delim: "[",
     column-gap: #0.7em,
-    row-gap: #0.4em,
+    row-gap: #0.6em,
     x[0], 0, 0, dots, 0;
     x[1], x[0], 0, dots, 0;
     x[2], x[1], x[0], dots, 0;
@@ -116,8 +116,8 @@ mat(
 )
 mat(
     delim: "[",
-    row-gap: #0.4em,
-    1; // a[0] = 1;
+    row-gap: #0.6em,
+    1;
     a[1];
     a[2];
     dots.v;
@@ -126,7 +126,7 @@ mat(
 =
 mat(
     delim: "[",
-    row-gap: #0.4em,
+    row-gap: #0.6em,
     b[0];
     b[1];
     b[2];
@@ -138,10 +138,167 @@ mat(
     dots.v;
     0;
 )
-$ <equ:deterministic_model_identification_equation_matrix_pade>]
+$ <equ:deterministic_model_identification_matrix_pade>]
 
+#align(center)[
+    #cetz.canvas({
+        import cetz.draw: *
 
+        content(
+            (0mm, 0mm),
+            [#pade_matrix]
+        )
 
-TODO
+        set-style(
+            stroke: 0.8pt,
+            mark: (transform-shape: false)
+        )
 
-但显然 Pade 存在一系列问题：
+        let sub_box = (x, y, w, h, color, label, lx, ly, lc) => {
+            set-style(stroke: (paint: color, thickness: 0.9pt, dash: (3pt, 2pt)))
+            rect((x, y), (x + w, y + h))
+            if (label != none) {
+                content(
+                    (x + w / 2 + lx, y + h / 2 + ly),
+                    text(fill: lc, label)
+                )
+            }
+        }
+
+        sub_box(-6.25, -1.3, 9.485, 4.65, blue, $bold(X)_0$, 0, 2.6, blue)
+        sub_box(-6.25, -1.4, 1.55, -1.95, purple, $bold(x)_(q+1)$, 0, -1.35, purple)
+        sub_box(-4.6, -1.4, 7.835, -1.95, purple, $bold(X)_q$, 0, -1.35, purple)
+        
+        sub_box(3.7, -1.64, 0.79, 2.62, green, $dash(bold(a))$, 0, -1.6, green)
+    })
+]
+
+在这里，我们先用下半部分即后 $p$ 行求解 $dash(bold(a))$（即 $a[n]$）：
+
+$ bold(X)_q dash(bold(a)) = - bold(x)_(q+1) quad => quad dash(bold(a)) = - bold(X)^(-1)_q bold(x)_(q+1) $ <equ:deterministic_model_identification_pade_a_bar>
+
+然后代入上半部分即前 $q+1$ 行计算 $b[n]$：
+
+$ bold(b) = bold(X)_0 bold(a) = bold(X)_0 vec(1, dash(bold(a))) $
+
+很直接，但显然也存在一系列问题：
++ 不保证所得系统是稳定的，极点（即 $1 + sum_(k=1)^p a[k] z^(-k) = 0$ 的根）可能在单位圆外；
++ 只约束了模型输出 $hat(x)[n]$ 和目标信号 $x[n]$ 的前 $p + q + 1$ 个样本相同，此后的匹配效果可能不佳；
++ 若 $bold(X)_q$ 奇异则可能无解。
+
+== Prony's Method
+
+=== Extensions of the Padé Approximation
+
+Prony 的想法很简单，就是在 Padé 基础上，将 $x[n]$ 的所有样本点都纳入考虑。还是把矩阵画出来：
+
+#let prony_matrix = [$
+mat(
+    delim: "[",
+    column-gap: #0.7em,
+    row-gap: #0.6em,
+    x[0], 0, 0, dots, 0;
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[q], x[q-1], x[q-2], dots, x[q-p];
+    x[q+1], x[q], x[q-1], dots, x[q-p+1];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[q+p], x[q+p-1], x[q+p-2], dots, x[q];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+)
+mat(
+    delim: "[",
+    row-gap: #0.6em,
+    1;
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+mat(
+    delim: "[",
+    row-gap: #0.6em,
+    b[0];
+    dots.v;
+    b[q];
+    0;
+    dots.v;
+    0;
+    dots.v;
+)
+$ <equ:deterministic_model_identification_matrix_prony>]
+
+#align(center)[
+    #cetz.canvas({
+        import cetz.draw: *
+
+        content(
+            (0mm, 0mm),
+            [#prony_matrix]
+        )
+
+        set-style(
+            stroke: 0.8pt,
+            mark: (transform-shape: false)
+        )
+
+        let sub_box = (x, y, w, h, color, label, lx, ly, lc) => {
+            set-style(stroke: (paint: color, thickness: 0.9pt, dash: (3pt, 2pt)))
+            rect((x, y), (x + w, y + h))
+            if (label != none) {
+                content(
+                    (x + w / 2 + lx, y + h / 2 + ly),
+                    text(fill: lc, label)
+                )
+            }
+        }
+
+        sub_box(-6.25, 0.4, 9.485, 1.95, blue, $bold(X)_0$, 0, 1.25, blue)
+        sub_box(-6.25, 0.3, 1.55, -2.65, purple, $bold(x)_(q+1)$, 0, -1.7, purple)
+        sub_box(-4.6, 0.3, 7.835, -2.65, purple, $bold(X)_q$, 0, -1.7, purple)
+        
+        sub_box(3.7, -1.64, 0.79, 2.62, green, $dash(bold(a))$, 0, -1.6, green)
+    })
+]
+
+和 @equ:deterministic_model_identification_matrix_pade 类似，只是矩阵的行数向下无限延伸（直到 $x[n]$ 不再有值的地方）。$bold(x)_(q+1)$ 和 $bold(X)_q$ 也随之延伸，理论上若 $x[n]$ 是无限长的序列，则此二者也为无限维向量和矩阵，不过实际情况下我们需要处理的 $x[n]$ 基本都是有限的序列。由此我们通过引入整个 $x[n]$ 的信息，解决了 Padé 法的第二个问题。
+
+#blockquote[
+    由于模型的描述能力是有限的，在多数情况下使用 Prony 对整个序列拟合效果的提升往往也伴随着前 $p + q + 1$ 个样本相对 Padé 法拟合效果的下降。当然，实际上如果我们更关注序列某些特定部分的拟合效果的话，可以只将这些样本对应的等式纳入矩阵求解。
+]
+
+考虑到我们引入了更多的等式，使 $bold(X)_q dash(bold(a)) = - bold(x)_(q+1)$ 变成了一个超定方程组，需要借助伪逆来得到最优的解：
+
+$ dash(bold(a)) = - text(fill: #purple, bold(X)^+_q) bold(x)_(q+1) = - text(fill: #purple, (bold(X)_q^H bold(X)_q)^(-1) bold(X)_q^H) bold(x)_(q+1) $
+
+我们再记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$，则有：
+
+$ dash(bold(a)) = - (text(fill: #blue, bold(X)_q^H bold(X)_q))^(-1) text(fill: #purple, bold(X)_q^H bold(x)_(q+1)) = - text(fill: #blue, bold(R)_x^(-1)) text(fill: #purple, bold(r)_x) $
+
+注意到对 $A^H A$ 这种形式的矩阵，对任意向量 $bold(a)$ 有 $bold(a)^H (A^H A) bold(a) = (bold(A a))^H (bold(A a)) = norm(bold(A a))^2 >= 0$，即 $A^H A$ 是半正定矩阵。由此，前述 $bold(R)_x = bold(X)_q^H bold(X)_q$ 也是（半）正定矩阵，#text(fill: red, "（TODO）")该性质将决定 $A(z)$ 是（临界）稳定的，由此解决 Padé 法的第一个问题。
+
+此外，若 $bold(R)_x$ 为正定矩阵，则其特征值都是正数，即行列式不为零，得矩阵可逆，解存在，由此解决 Padé 法的第三个问题；#text(fill: red, "（TODO）")若 $bold(R)_x$ 为包含零特征值的半正定矩阵，则奇异，不可逆，但这实际上说明模型的阶数冗余了，可以降低一些再尝试。
+
+=== Prony Normal Equations
+
+显然，上节中我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有原因的。首先，我们画出 $bold(R)_x$ 的计算过程：
+
+$
+bold(R)_x = // bold(X)_q^H bold(X)_q =
+mat(
+    delim: "[",
+    x^*[q], dots, x^*[q+p-1], dots;
+    x^*[q-1], dots, x^*[q+p-2], dots;
+    dots.v, dots.down, dots.v, dots.down;
+    x^*[q-p+1], dots, x^*[q], dots;
+)
+mat(
+    delim: "[",
+    x[q], x[q-1], dots, x[q-p+1];
+    dots.v, dots.v, dots.down, dots.v;
+    x[q+p-1], x[q+p-2], dots, x[q];
+    dots.v, dots.v, dots.down, dots.v;
+)
+$ <equ:deterministic_model_identification_matrix_prony>
+
+#text(fill: red, "（TODO）")（Rx、rx和相关矩阵）
