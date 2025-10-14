@@ -277,11 +277,11 @@ $ dash(bold(a)) = - (text(fill: #blue, bold(X)_q^H bold(X)_q))^(-1) text(fill: #
 
 注意到对 $A^H A$ 这种形式的矩阵，对任意向量 $bold(a)$ 有 $bold(a)^H (A^H A) bold(a) = (bold(A a))^H (bold(A a)) = norm(bold(A a))^2 >= 0$，即 $A^H A$ 是半正定矩阵。由此，前述 $bold(R)_x = bold(X)_q^H bold(X)_q$ 也是（半）正定矩阵，#text(fill: red, "（TODO）")该性质将决定 $A(z)$ 是（临界）稳定的，由此解决 Padé 法的第一个问题。
 
-此外，若 $bold(R)_x$ 为正定矩阵，则其特征值都是正数，即行列式不为零，得矩阵可逆，解存在，由此解决 Padé 法的第三个问题；#text(fill: red, "（TODO）")若 $bold(R)_x$ 为包含零特征值的半正定矩阵，则奇异，不可逆，但这实际上说明模型的阶数冗余了，可以降低一些再尝试。
+此外，若 $bold(R)_x$ 为正定矩阵，则其特征值都是正数，即行列式不为零，得矩阵可逆，解存在，由此解决 Padé 法的第三个问题；若 $bold(R)_x$ 为包含零特征值的半正定矩阵，则奇异，不可逆，但这实际上说明模型的阶数冗余，可以降低一些再尝试。
 
 === Prony Normal Equations
 
-显然，上节中我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有原因的。首先，我们画出 $bold(R)_x$ 的计算过程：
+上节中，我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有原因的。我们画出 $bold(R)_x$ 的计算过程：
 
 $
 inline(
@@ -291,24 +291,66 @@ inline(
     &=
     mat(
         delim: "[",
-        x^*[q], dots, x^*[q+p-1], dots;
-        x^*[q-1], dots, x^*[q+p-2], dots;
+        x^*[q], x^*[q+1], x^*[q+2], dots;
+        x^*[q-1], x^*[q], x^*[q+1], dots;
         dots.v, dots.down, dots.v, dots.down;
-        x^*[q-p+1], dots, x^*[q], dots;
+        x^*[q-p+1], x^*[q-p+2], x^*[q-p+3], dots;
     )
     mat(
         delim: "[",
         x[q], x[q-1], dots, x[q-p+1];
+        x[q+1], x[q], dots, x[q-p+2];
+        x[q+2], x[q+1], dots, x[q-p+3];
         dots.v, dots.v, dots.down, dots.v;
-        x[q+p-1], x[q+p-2], dots, x[q];
-        dots.v, dots.v, dots.down, dots.v;
+        // x[q+p-1], x[q+p-2], dots, x[q];
+        // dots.v, dots.v, dots.down, dots.v;
     ) \
     &=
-    mat(
+    display(sum_(n=q+1)^infinity) mat(
         delim: "[",
-        
+        column-gap: #1.0em,
+        row-gap: #0.5em,
+        x^*[n-1] x[n-1], x^*[n-1] x[n-2], dots, x^*[n-1] x[n-p];
+        x^*[n-2] x[n-1], x^*[n-2] x[n-2], dots, x^*[n-2] x[n-p];
+        dots.v, dots.v, dots.down, dots.v;
+        x^*[n-p] x[n-1], x^*[n-p] x[n-2], dots, x^*[n-p] x[n-p];
     )
 )
-$ <equ:deterministic_model_identification_matrix_prony>
+$
+
+若我们记：
+
+$ r_x (k, l) := [bold(R)_x]_(k, l) = sum_(n=q+1)^infinity x^*[n-k] x[n-l] $ <equ:deterministic_model_identification_prony_ne_rx>
+
+则 $bold(R)_x$ 又可以写为：
+
+$
+bold(R)_x =
+mat(
+    delim: "[",
+    column-gap: #1.0em,
+    row-gap: #0.5em,
+    r_x (1, 1), r_x (1, 2), dots, r_x (1, p);
+    r_x (2, 1), r_x (2, 2), dots, r_x (2, p);
+    dots.v, dots.v, dots.down, dots.v;
+    r_x (p, 1), r_x (p, 2), dots, r_x (p, p);
+)
+$
+
+// 由 @sec:fun_rp_autocorrelation 对自相关的梳理，我们意识到 $r_x (k, l)$ 就是
+
+观察 @equ:deterministic_model_identification_prony_ne_rx，它求的是信号 $x[n]$ 延迟 $k$ 和延迟 $l$ 后的两个信号的内积，其实就是自相关。？？？
+
+#blockquote[
+    由于 $bold(X)_q$ 中不包含未定义的信号样本（例如零点之前或超出有限信号长度的样本）且行数有限，我们得到的 $r_x (k, l)$ 所表现出的行为就是只取固定长度的两段延迟信号计算自相关。
+
+    前面我们考虑的是无限长的信号，如果考虑有限的长度为 $N$ 的信号 $x[n]$这个事情会更明确一些：
+
+    $ r_x (k, l) = sum_(n=q+1)^(N-1) x^*[n-k] x[n-l] $
+
+    其实际上只用了长度为 $N-q-1$ 的序列在运算，给开头和末尾留下了一些空间，同时矩阵中每项所用的序列长度都是一致的。
+]
 
 #text(fill: red, "（TODO）")（Rx、rx和相关矩阵）
+
+

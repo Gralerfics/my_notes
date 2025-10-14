@@ -5,7 +5,8 @@
 
 = Spectrum Estimation
 
+== Motivation
+
 == Nonparametric Spectrum Estimation
 
 == Parametric Spectrum Estimation
-
