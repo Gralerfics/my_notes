@@ -16,7 +16,8 @@
 #show: ilm.with(
     title: [Notes of Statistical Digital Signal Processing and Modelling],
     author: "Gralerfics",
-    date: datetime(year: 2025, month: 10, day: 11),
+    // date: datetime(year: 2025, month: 10, day: 11),
+    date: datetime.today(),
     // abstract: [
     //     Abstract.
     // ],

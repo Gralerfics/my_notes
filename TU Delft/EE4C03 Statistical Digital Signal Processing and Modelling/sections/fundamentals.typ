@@ -175,7 +175,7 @@ $ m_x (n) = E{x(n)} $
 
 对于一个随机过程 $x(n)$，其自相关函数即为指定两个索引 $k$ 和 $l$ 的随机变量的相关函数：
 
-$ r_x (k, l) = r_(x(k), x(l)) = E{x(k) x^*(l)} $
+$ r_x (k, l) = r_(x(k), x(l)) = E{x(k) x^*(l)} $ <equ:fun_rp_autocor_def>
 
 就该公式来看，这里的每一个 $r_x$ 只是和两个随机变量有关，和随机过程整体没有什么关联，不过后续介绍宽平稳（WSS）的时候就有别的说法了。
 
@@ -330,7 +330,7 @@ $ sum_(k=-infinity)^infinity abs(c_x (k)) < infinity $ <equ:fun_rp_ergo_autocov_
 
 而后是*相关遍历性*（Correlation-Ergodicity），同样先定义样本自相关函数。因为 WSS 过程的自相关函数仅与时间差有关，所有样本中所有时间差为 $k$ 的样本对都可以用来估计自相关函数的第 $k$ 项，我们直接都加起来取个平均：
 
-$ hat(r)_x^((N)) (k) = 1/N sum_(n=0)^(N-1-k) x[n+k] x^*[n] $
+$ hat(r)_x^((N)) (k) = 1/N sum_(n=0)^(N-1-k) x[n+k] x^*[n] $ <equ:fun_rp_ergo_autocor_sample>
 
 #blockquote[
     你可能会注意到该样本自相关的定义中，总共用了 $N-k$ 组样本对相关结果的加和，但除以的却是 $N$ 而非 $N-k$。
@@ -362,25 +362,128 @@ $ forall k, lim_(N -> infinity) 1/N^2 sum_(n=0)^(N-1) sum_(m=0)^(N-1) abs(r_x (n
 
 此外，绝对可和条件 @equ:fun_rp_ergo_autocov_abssum 也是相关遍历的*充分*条件。
 
-=== Random Process and Digital Signals, Samples and Estimation
-
-有了遍历性的假设，我们就可以尝试从样本（我们考虑数字信号）中估计随机过程的分布。我们取随机过程 ${x(n)}$ 的 $N$ 次实现（采样），第 $k$ 次的结果记为 $x_k [n]$，或者用向量表示：
-
-$ bold(x)_k^' = vec(x_k [0], x_k [1], x_k [2], dots.v) $
-
-但我们在动态的信号处理过程中，一般考虑当前时刻 $n$ 及最近几个过去时刻的信号值构成的窗口（设取最近 $p$ 个样本点）。为了与后面的分析统一，我们取：
-
-$ bold(x)_k = vec(x_k [n], x_k [n-1], dots.v, x_k [n-p+1]) $
-
-#text(fill: red, "（TODO）")
-
 == Power Spectrum
+
+#text(fill: red, "（TODO）")补充关于能量信号、功率信号、功率谱密度（PSD）。
+
+由 Wiener–Khinchin Theorem，宽平稳（WSS）过程的功率谱密度是其自相关函数的傅里叶变换。
 
 // WSS 是定义 PSD 的前提
 
 == Filtering
 
-// 自相关是对一个信号在不同时间延迟下与自身相似程度的衡量。需要注意的是，其本质是这种衡量的操作，而不是某个固定的定义公式，后文会体现这一点。
+#text(fill: red, "（TODO）")
+
+== Random Process and Digital Signals
+
+我们的随机过程 $x(n)$ 是分布，而我们的数字信号 $x[n]$ 可以认为是从中采样得到的某个实现。我们为随机过程定义了均值、自相关等特征，也可以为数字信号定义均值和自相关函数等运算，我们现在希望考察的就是双方的区别与联系。
+
+澄清这一点之后，我们就可以清晰的了解该使用什么手段借助样本估计分布特征了，注意这是我们自始至终不变的目标。我们选取一些常用角度来展开这个话题。
+
+=== Auto-correlation Estimation with Multiple Realizations <sec:fun_rp_auto_cor_estimation_with_multiple_realizations>
+
+如果我们有大量对随机过程的采样结果（实现），我们就可以直接通过定义（@equ:fun_rp_autocor_def）来估计其分布特征，如自相关函数。
+
+// 那么如果相关遍历性不成立呢？这种情况下我们就不能只通过单个长时间的实现来估计总体的自相关特征了。我们只能从自相关函数的定义入手，用不同的实现来直接估计它。
+
+对随机过程 ${x(n)}$ 进行 $N$ 次实现，每次长度为 $M$，第 $i$ 次的结果记为 $x_i [n]$，或者用向量表示（当然 $M$ 也可以是无穷大，这里设为有限长度以便展示）：
+
+$ bold(x)_i = vec(x_i [0], x_i [1], dots.v, x_i [M-1]) $
+
+多次采样的数据我们给它拼成矩阵形式：
+
+$
+X = [bold(x)_0 quad bold(x)_1 quad dots quad bold(x)_(N-1)]
+=
+mat(
+    delim: "[",
+    x_0 [0], x_1 [0], dots, x_(N-1) [0];
+    x_0 [1], x_1 [1], dots, x_(N-1) [1];
+    dots.v, dots.v, dots.down, dots.v;
+    x_0 [M-1], x_1 [M-1], dots, x_(N-1) [M-1];
+)
+$
+
+由定义，$r_x (k, l) = E{x(k) x^*(l)}$，这里的 $E$ 就是在总体上求期望，所以我们直接用不同实现中的 $x_i [k]$ 和 $x_i [l]$ 来估计它即可：
+
+$ hat(r)_x (k, l) = 1/N sum_(i=0)^(N-1) x_i [k] x_i^* [l] $
+
+我们把估计自相关函数的值也写成矩阵，其可以通过 $X$ 运算得来，从而得到简洁矩阵表达：
+
+$
+hat(bold(R))_x &:=
+mat(
+    delim: "[",
+    column-gap: #1.0em,
+    row-gap: #0.5em,
+    hat(r)_x (0, 0), hat(r)_x (0, 1), dots, hat(r)_x (0, M-1);
+    hat(r)_x (1, 0), hat(r)_x (1, 1), dots, hat(r)_x (1, M-1);
+    dots.v, dots.v, dots.down, dots.v;
+    hat(r)_x (M-1, 0), hat(r)_x (M-1, 1), dots, hat(r)_x (M-1, M-1);
+) \
+&=
+display(1/N sum_(i=0)^(N-1)) mat(
+    delim: "[",
+    column-gap: #1.0em,
+    row-gap: #0.5em,
+    x_i [0] x^*_i [0], x_i [0] x^*_i [1], dots, x_i [0] x^*_i [M-1];
+    x_i [1] x^*_i [0], x_i [1] x^*_i [1], dots, x_i [1] x^*_i [M-1];
+    dots.v, dots.v, dots.down, dots.v;
+    x_i [M-1] x^*_i [0], x_i [M-1] x^*_i [1], dots, x_i [M-1] x^*_i [M-1];
+) \
+&=
+inline(
+    mat(
+        delim: "[",
+        x_0 [0], x_1 [0], dots, x_(N-1) [0];
+        x_0 [1], x_1 [1], dots, x_(N-1) [1];
+        dots.v, dots.v, dots.down, dots.v;
+        x_0 [M-1], x_1 [M-1], dots, x_(N-1) [M-1];
+    )
+    mat(
+        delim: "[",
+        x_0 [0], x_0 [1], dots, x_0 [M-1];
+        x_1 [0], x_1 [1], dots, x_1 [M-1];
+        dots.v, dots.v, dots.down, dots.v;
+        x_(N-1) [0], x_(N-1) [1], dots, x_(N-1) [M-1];
+    )^*
+) \
+&=
+1/N bold(X) bold(X)^H
+$ <equ:fun_rp_autocor_matrix>
+
+=== Auto-correlation Estimation with Correlation-Ergodicity
+
+由上节可见，样本（实现）的数量 $N$ 越大，估计就越准确。但若我们只有一条样本（$N = 1$），采用这种方法的估计就将极不精确。此时，如果随机过程遍历性成立，我们就允许使用这条样本不同时间上的信息来进行估计。
+
+我们定义有限长数字信号 $x[n]$（长度为 $N$，注意这里的 $N$ 不是上面的实现数量）的自相关函数为：
+
+$ R_(x x) (k) = sum_(n=0)^(N-1-k) x[n + k] x^*[n] $
+
+这从公式定义上可以理解为是对一个信号在不同时间延迟下与自身相似程度的衡量。
+
+实际上，只要能表达这个含义即可称为自相关，故不同的信号自相关定义有很多种，只是存在细节上的差别，例如是否除以样本数量（取了一个平均）、是延迟 $k$ 还是提前 $k$（结果相当于对称了一下）等，哪个方便用哪个即可。
+
+这里我们选取该定义是因为 MATLAB 的互相关函数 xcorr 是按这种方式定义的，文档原文是这么写的#footnote("参考 https://nl.mathworks.com/help/matlab/ref/xcorr.html#mw_01b546db-b642-4f02-8625-16078810d80f")：
+
+$
+hat(R)_(x y) (m) = cases(
+    sum_(n=0)^(N-m-1) x_(n+m) y_n^*", " &m >= 0",",
+    hat(R)_(y x)^* (-m)", " &m < 0".",
+)
+$
+
+回忆 @equ:fun_rp_ergo_autocor_sample 定义的样本自相关函数 $hat(r)_x^((N)) (k)$，刚巧和我们定义的信号自相关函数 $R_(x x) (k)$ 形式几乎一致，只差一个系数。
+
+根据前文的定义，如果过程是相关遍历的，那么这个样本自相关函数 $hat(r)_x^((N)) (k)$ 就可以用来正确地估计随机分布的自相关函数 $r_x (k)$。由此，与其形式几乎一致的信号互相关函数 $hat(R)_(x y) (m)$ 也就具有同样的物理意义，即也可以用于估计 $r_x (k)$（需要有系数上的调整）。
+
+*总结来说*，相关遍历性的成立令我们可以在实现数量不足的情况下，使用其样本的信号自相关函数来估计随机过程的自相关特征。
+
+=== Auto-correlation Estimation (Comprehensive)
+
+如果我们有多个的实现（样本）可用，同时遍历性还成立，那么就可以综合两种优势进行估计。
+
+具体地，@sec:fun_rp_auto_cor_estimation_with_multiple_realizations 节中我们估计的是 $r_x (k, l)$，如果遍历性成立（平稳性自然也成立），则自相关函数只与时间差有关，那么我们就可以用所有的 $hat(r)_x (n, n+k)$（$hat(bold(R))_x$ 中处在同一条斜线上的值）来估计 $r_x (k)$。
 
 = Digital Signal Processing
 

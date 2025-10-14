@@ -279,16 +279,18 @@ $ dash(bold(a)) = - (text(fill: #blue, bold(X)_q^H bold(X)_q))^(-1) text(fill: #
 
 此外，若 $bold(R)_x$ 为正定矩阵，则其特征值都是正数，即行列式不为零，得矩阵可逆，解存在，由此解决 Padé 法的第三个问题；若 $bold(R)_x$ 为包含零特征值的半正定矩阵，则奇异，不可逆，但这实际上说明模型的阶数冗余，可以降低一些再尝试。
 
+所以我们最终将超定方程组 $bold(X)_q dash(bold(a)) = - bold(x)_(q+1)$ 转化为了可以直接用逆求解的 $bold(R)_x dash(bold(a)) = - bold(r)_x$，强调这一点是为了为下文的 Prony Normal Equations 作铺垫。
+
 === Prony Normal Equations
 
-上节中，我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有原因的。我们画出 $bold(R)_x$ 的计算过程：
+上节中，我们记 $bold(R)_x = bold(X)_q^H bold(X)_q$ 和 $bold(r)_x = bold(X)_q^H bold(x)_(q+1)$ 是有含义的。我们画出 $bold(R)_x$ 的计算过程：
 
 $
+bold(R)_x
+&=
+bold(X)_q^H bold(X)_q \
+&=
 inline(
-    bold(R)_x
-    &=
-    bold(X)_q^H bold(X)_q \
-    &=
     mat(
         delim: "[",
         x^*[q], x^*[q+1], x^*[q+2], dots;
@@ -304,17 +306,17 @@ inline(
         dots.v, dots.v, dots.down, dots.v;
         // x[q+p-1], x[q+p-2], dots, x[q];
         // dots.v, dots.v, dots.down, dots.v;
-    ) \
-    &=
-    display(sum_(n=q+1)^infinity) mat(
-        delim: "[",
-        column-gap: #1.0em,
-        row-gap: #0.5em,
-        x^*[n-1] x[n-1], x^*[n-1] x[n-2], dots, x^*[n-1] x[n-p];
-        x^*[n-2] x[n-1], x^*[n-2] x[n-2], dots, x^*[n-2] x[n-p];
-        dots.v, dots.v, dots.down, dots.v;
-        x^*[n-p] x[n-1], x^*[n-p] x[n-2], dots, x^*[n-p] x[n-p];
     )
+) \
+&=
+display(sum_(n=q+1)^infinity) mat(
+    delim: "[",
+    column-gap: #1.0em,
+    row-gap: #0.5em,
+    x^*[n-1] x[n-1], x^*[n-1] x[n-2], dots, x^*[n-1] x[n-p];
+    x^*[n-2] x[n-1], x^*[n-2] x[n-2], dots, x^*[n-2] x[n-p];
+    dots.v, dots.v, dots.down, dots.v;
+    x^*[n-p] x[n-1], x^*[n-p] x[n-2], dots, x^*[n-p] x[n-p];
 )
 $
 
@@ -337,20 +339,119 @@ mat(
 )
 $
 
-// 由 @sec:fun_rp_autocorrelation 对自相关的梳理，我们意识到 $r_x (k, l)$ 就是
+观察 @equ:deterministic_model_identification_prony_ne_rx，它求的是信号 $x[n]$ 延迟 $k$ 和延迟 $l$ 后的两个信号的内积，其实带有自相关的含义。
 
-观察 @equ:deterministic_model_identification_prony_ne_rx，它求的是信号 $x[n]$ 延迟 $k$ 和延迟 $l$ 后的两个信号的内积，其实就是自相关。？？？
+#text(fill: red, "（TODO）")但*注意*，这里我们不是在估计自相关函数，也没有对产生信号的随机过程作任何平稳性、遍历性的假设，而只是 Prony 法自然地导出了这个式子，所以我们不去纠结其形式上同 @equ:fun_rp_autocor_matrix 的差异及其物理意义上的细节差别，没有太大的意义。
 
-#blockquote[
-    由于 $bold(X)_q$ 中不包含未定义的信号样本（例如零点之前或超出有限信号长度的样本）且行数有限，我们得到的 $r_x (k, l)$ 所表现出的行为就是只取固定长度的两段延迟信号计算自相关。
+// #blockquote[
+//     由于 $bold(X)_q$ 中不包含未定义的信号样本（例如零点之前或超出有限信号长度的样本）且行数有限，我们得到的 $r_x (k, l)$ 所表现出的行为就是只取固定长度的两段延迟信号计算自相关。
 
-    前面我们考虑的是无限长的信号，如果考虑有限的长度为 $N$ 的信号 $x[n]$这个事情会更明确一些：
+//     前面我们考虑的是无限长的信号，如果考虑有限的长度为 $N$ 的信号 $x[n]$这个事情会更明确一些：
 
-    $ r_x (k, l) = sum_(n=q+1)^(N-1) x^*[n-k] x[n-l] $
+//     $ r_x (k, l) = sum_(n=q+1)^(N-1) x^*[n-k] x[n-l] $
 
-    其实际上只用了长度为 $N-q-1$ 的序列在运算，给开头和末尾留下了一些空间，同时矩阵中每项所用的序列长度都是一致的。
-]
+//     其实际上只用了长度为 $N-q-1$ 的序列在运算，给开头和末尾留下了一些空间，同时矩阵中每项所用的序列长度都是一致的。
+// ]
 
-#text(fill: red, "（TODO）")（Rx、rx和相关矩阵）
+同时，利用 @equ:deterministic_model_identification_prony_ne_rx 我们也可以将 $bold(r)_x$ 重写为：
+
+$ bold(r)_x = vec(r_x (1, 0), r_x (2, 0), dots.v, r_x (p, 0)) $
+
+于是 $bold(R)_x dash(bold(a)) = - bold(r)_x$ 就可以写为如下形式：
+
+$
+mat(
+    delim: "[",
+    r_x (1, 1), r_x (1, 2), dots, r_x (1, p);
+    r_x (2, 1), r_x (2, 2), dots, r_x (2, p);
+    dots.v, dots.v, dots.down, dots.v;
+    r_x (p, 1), r_x (p, 2), dots, r_x (p, p);
+)
+mat(
+    delim: "[",
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+-mat(
+    delim: "[",
+    r_x (1, 0);
+    r_x (2, 0);
+    dots.v;
+    r_x (p, 0);
+)
+$
+
+或展开写，这种形式被称为 Prony Normal Equations：
+
+$ sum_(l=1)^p a[l] r_x (k, l) = -r_x (k, 0), quad k = 1, 2, dots, p $
+
+强调它的原因是之后的推导中会经常出现类似的形式。
+
+=== The Minimum Error and Augmented Normal Equations
+
+由于我们求的是最小二乘解，所以实际上将最优解代入原方程 $bold(X)_q dash(bold(a)) = - bold(x)_(q+1)$ 后，还是会存在一个被最小化的误差项：
+
+$ bold(e) = bold(X)_q dash(bold(a)) + bold(x)_(q+1) $
+
+由最小二乘解的性质，我们取最优解即这个误差被最小化时，它一定是与 $bold(X)_q$ 的所有列正交的，即有：
+
+$ bold(X)_q^H bold(e) = 0 quad <=> quad bold(X)_q^H (bold(X)_q dash(bold(a)) + bold(x)_(q+1)) = 0 quad <=> quad bold(R)_x dash(bold(a)) = - bold(r)_x $
+
+有时我们希望知道这个误差有多大，可以用于判断模型（滤波器）的拟合效果好不好。误差过大时说明需要提高滤波器的阶数，误差足够低时则或许可以适当降低滤波器的阶数。对于阶数为 $p, q$ 的滤波器我们定义误差大小为：
+
+$ epsilon_(p, q) = norm(bold(e))^2 = bold(e)^H bold(e) = (bold(X)_q dash(bold(a)) + bold(x)_(q+1))^H bold(e) = bold(x)^H_(q+1) bold(e) $
+
+最后一步是由于 $bold(X)_q^H bold(e) = 0$。继续代入得：
+
+$
+epsilon_(p, q) &= bold(x)^H_(q+1) bold(e) = bold(x)^H_(q+1) (bold(X)_q dash(bold(a)) + bold(x)_(q+1)) \
+&= bold(x)^H_(q+1) bold(x)_(q+1) + (bold(x)^H_(q+1) bold(X)_q) dash(bold(a)) \
+&= r_x (0, 0) + [r_x (0, 1), r_x (0, 2), dots, r_x (0, p)] dash(bold(a)) \
+&= r_x (0, 0) + sum_(k=1)^p a[k] r_x (0, k)
+$
+
+化成这种形式的目的是将 $epsilon_(p, q)$ 统一到方程 $bold(R)_x dash(bold(a)) = - bold(r)_x$ 中去（把常量移到矩阵最左侧一列了）：
+
+$
+mat(
+    delim: "[",
+    column-gap: #1.0em,
+    row-gap: #0.5em,
+    augment: #(hline: 1, vline: 1),
+    text(fill: #blue, r_x (0, 0)), text(fill: #blue, r_x (0, 1)), text(fill: #blue, r_x (0, 2)), dots, text(fill: #blue, r_x (0, p));
+    text(fill: #red, r_x (1, 0)), r_x (1, 1), r_x (1, 2), dots, r_x (1, p);
+    text(fill: #red, r_x (2, 0)), r_x (2, 1), r_x (2, 2), dots, r_x (2, p);
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    text(fill: #red, r_x (p, 0)), r_x (p, 1), r_x (p, 2), dots, r_x (p, p);
+)
+mat(
+    delim: "[",
+    row-gap: #0.5em,
+    augment: #(hline: 1),
+    text(fill: #red, 1);
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+mat(
+    delim: "[",
+    row-gap: #0.5em,
+    augment: #(hline: 1),
+    text(fill: #blue, epsilon_(p, q));
+    0;
+    0;
+    dots.v;
+    0;
+)
+$
+
+这样的形式称为 Augmented Normal Equations。
+
+== All-pole Modelling
 
 
