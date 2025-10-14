@@ -313,7 +313,10 @@ $ lim_(N -> infinity) E{abs(hat(m)_x^((N)) - m_x)^2} = 0 $
 
 不过我们没法真的从真实分布采样再去验证这个条件，所以我们提供一个均值遍历成立的*充分必要*条件（暂不考虑证明）：
 
-$ lim_(N -> infinity) 1/N sum_(k=0)^(N-1) c_x (k) = 0 $
+// $ lim_(N -> infinity) 1/N sum_(k=0)^(N-1) c_x (k) = 0 $
+// TODO: 这是课件上给的条件，下面是 GPT 给出的条件，类似的还有相关遍历处的充要条件。关于二重和同单重的在这里是否等价我拿不准，总之先如此，后者的似乎更令人信服。
+
+$ lim_(N -> infinity) 1/N^2 sum_(n=0)^(N-1) sum_(m=0)^(N-1) c_x (n - m) = 0 $
 
 即自协方差函数衰减得足够快，一个偏直觉的解读是，这种情况下随机变量之间的相关性不会在时间上滞留太久，长期平均可以将前后的关联稀释掉。
 
@@ -353,7 +356,9 @@ $ lim_(N -> infinity) E{abs(hat(r)_x^((N)) (k) - r_x (k))^2} = 0 $
 
 同样这只是最朴素的式子，我们不证明地给出实用的*充分必要*条件：
 
-#text(fill: red, "（TODO）")
+// $ forall l, lim_(N -> infinity) 1/N sum_(k=0)^(N-1) abs(r_x (k) - r_x (k + l))^2 = 0 $
+
+$ forall k, lim_(N -> infinity) 1/N^2 sum_(n=0)^(N-1) sum_(m=0)^(N-1) abs(r_x (n - m) - r_x (n - m + k))^2 = 0 $
 
 此外，绝对可和条件 @equ:fun_rp_ergo_autocov_abssum 也是相关遍历的*充分*条件。
 
