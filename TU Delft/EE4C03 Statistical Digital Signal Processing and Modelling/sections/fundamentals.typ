@@ -212,7 +212,7 @@ $ c_(x y) (k, l) = E{[x(k) - m_x (k)] [y(l) - m_y (l)]^*} = r_(x y) (k, l) - m_x
         import cetz.draw: *
 
         let samples = 100
-        let len = 20
+        let len = 30
 
         let (x, y) = (0, 0)
         let (x-new, y-new) = (0, 0)
@@ -227,8 +227,8 @@ $ c_(x y) (k, l) = E{[x(k) - m_x (k)] [y(l) - m_y (l)]^*} = r_(x y) (k, l) - m_x
             (x, y) = (0, v.at(0))
             
             for k in range(len) {
-                (rng, v) = uniform-f(rng, low: -0.6, high: 0.3, size: 1)
-                (x-new, y-new) = (x + 0.6, y + v.at(0))
+                (rng, v) = uniform-f(rng, low: -0.4, high: 0.15, size: 1)
+                (x-new, y-new) = (x + 0.4, y + v.at(0))
 
 
                 if (idx == 0) {
@@ -489,6 +489,8 @@ $
 
 #text(fill: red, "（TODO）")主要DTFT、z变换、频域特性、稳定性、功率、能量等。
 
-= Optimization
+= Optimization <sec:fun_optimization>
 
 #text(fill: red, "（TODO）")主要关于最小二乘法、拉格朗日乘子法等。
+
+#text(fill: red, "（TODO）")要写一下复变函数变量分成自己和其共轭、求解时对共轭求偏导的原因。

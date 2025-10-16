@@ -6,13 +6,17 @@
 
 == Motivation
 
-In fact, modelling is a process of compressing. A parameterized model uses finite parameters to represent complex systems. For signals, we can define a signal model as a mathematical function that can generate signals similar to the target signal.
+// In fact, modelling is a process of compressing. A parameterized model uses finite parameters to represent complex systems. For signals, we can define a signal model as a mathematical function that can generate signals similar to the target signal.
 
-我们的目标是对给定的信号 $x[n]$ 进行建模，即找到一个模型 $H(z)$ 使其输出信号 $hat(x)[n]$ 能够尽可能接近目标信号 $x[n]$。
+实际上，建模（Modelling）可以视为对信号的压缩（Compressing）过程。一个参数化的模型可以使用比信号样本数更少的参数数量来表示复杂的信号，实现更高效的存储和传输。
+
+压缩得到的参数也可以视为对信号本质特征的描述，例如蕴含其背后的物理规律等，这就允许我们利用模型对信号的未知部分进行预测（Prediction），或称外推（Extrapolation）。
+
+现在，我们的目标是对给定的数字信号 $x[n]$ 进行建模，即找到一个模型 $H(z)$ 使其输出信号 $hat(x)[n]$ 能够尽可能接近目标信号 $x[n]$。
 
 == Auto-regression and Moving Average (ARMA) Model
 
-我们用常用的自回归滑动平均模型（Auto-regression and Moving Average Model）即 $"ARMA"(p, q)$ 对信号建模，其传递函数定义如下：
+我们可以根据实际情况使用不同种类的模型来对信号建模，这里以时间序列分析常用的自回归滑动平均模型（Auto-regression and Moving Average Model）即 $"ARMA"(p, q)$ 为例。其传递函数定义如下：
 
 $ Y(z) / X(z) = H(z) = (sum_(k=0)^q b[k] z^(-k)) / (1 + sum_(k=1)^p a[k] z^(-k)) = B(z) / A(z) $
 
@@ -28,11 +32,13 @@ $ y[n] + sum_(k=1)^p a[k] y[n-k] = sum_(k=0)^q b[k] x[n-k] $
 
 $ y[n] + a[1] y[n-1] + ... + a[p] y[n-p] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
 
-=== Autoregressive (AR) Model
+显然，这个系统是典型的线性移不变（Linear Shift-Invariant，LSI）系统，具有良好的性质。
+
+=== Autoregressive (AR) Model (All-Pole Model)
 
 若只有自回归的部分，即 $"AR"(p)="ARMA"(p, 0)$：
 
-$ H(z) = Y(z) / X(z) = b[0] / (1 + sum_(k=1)^p a[k] z^(-k)) $
+$ H(z) = Y(z) / X(z) = b[0] / (1 + sum_(k=1)^p a[k] z^(-k)) $ <equ:ar_model_transfer_function>
 
 在时域即：
 
@@ -42,9 +48,9 @@ $ y[n] + sum_(k=1)^p a[k] y[n-k] = b[0] x[n] $
 
 $ a[0] y[n] + a[1] y[n-1] + ... + a[p] y[n-p] = b[0] x[n] $
 
-该模型认为当前时刻的输出 $y[n]$ 是前 $p$ 个时刻的输出 $y[n-1], ..., y[n-p]$ 以及当前时刻的输入 $x[n]$ 的线性组合，所以称为自回归模型。
+该模型认为当前时刻的输出 $y[n]$ 是前 $p$ 个时刻的输出 $y[n-1], ..., y[n-p]$ 以及当前时刻的输入 $x[n]$ 的线性组合，所以称为自回归模型。由于该模型无零点，故也被称为全极点模型（All-Pole Model）。
 
-=== Moving Average (MA) Model
+=== Moving Average (MA) Model (All-Zero Model)
 
 若只有滑动平均的部分，即 $"MA"(q)="ARMA"(0, q)$：
 
@@ -62,9 +68,7 @@ $ y[n] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
 
 == Signal Models
 
-作为一个离散时间系统，$H(z)$ 并不能直接表示信号，而是需要接受一个输入以获得输出。我们将输出信号作为模型对目标信号的估计 $hat(x)[n]$，将输入信号 $x[n]$ 封装为模型的一部分。
-
-针对输入信号的类型我们有两种选择，对应两类建模方式如下。
+作为一个离散时间系统，$H(z)$ 并不能直接表示信号，而是需要接受一个输入以获得输出。我们将输出信号作为模型对目标信号的估计 $hat(x)[n]$，将输入信号 $x[n]$ 封装为模型的一部分。由于该模型无极点，故也被称为全零点模型（All-Zero Model）。
 
 === Deterministic Modelling
 
@@ -105,9 +109,9 @@ $ y[n] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
     )
 ] <fig:signal_model_deterministic>
 
-我们可以选择一个已知的、确定的信号，将其固定为系统的输入，稳定得到我们想要的输出信号 $hat(x)[n]$，使其值尽可能接近目标信号 $x[n]$，称为 Deterministic Modelling。
+我们可以选择一个已知的、确定的信号，将其固定为系统的输入，稳定得到我们想要的输出信号 $hat(x)[n]$，使其值尽可能接近目标信号 $x[n]$，用于对确定的信号进行建模，称为 Deterministic Modelling。
 
-为了简化分析，我们可以选择使用最简单的单位脉冲信号 $delta[n]$ 作为输入信号，这使得系统的输出信号 $hat(x)[n]$ 即为系统的单位冲激响应 $h[n]$。
+这个输入信号可以根据实际情况进行选择，符合目标信号的特征的输入信号有时可以减轻模型拟合的负担。在这里我们可以选择使用最简单的单位脉冲信号 $delta[n]$ 作为输入信号，这使得系统的输出信号 $hat(x)[n]$ 即为系统的单位冲激响应 $h[n]$。
 
 === Stochastic Modelling
 
@@ -124,7 +128,7 @@ $ y[n] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
     )
 ] <fig:signal_model_stochastic>
 
-我们还可以选择使用一个已知分布的随机噪声作为输入，得到输出信号 $hat(x)[n]$ 使其统计特征与目标信号 $x[n]$ 一致，称为 Stochastic Modelling。
+我们还可以选择使用一个已知分布的随机噪声作为输入，得到输出信号 $hat(x)[n]$ 使其统计特征（例如均值、自相关函数）与目标信号 $x[n]$ 一致，从而对随机过程进行建模，称为 Stochastic Modelling。
 
 我们可以选择使用均值为 $0$、方差为 $sigma_v^2$ 的白噪声 $v[n]$ 作为输入信号。这样做的依据是其自相关函数为 $r_v [k] = sigma_v^2 delta[k]$，对其进行傅里叶变换得其功率谱密度为常数 $P_v (omega) = sigma_v^2$，即在所有频率上均有相同的能量分布。
 

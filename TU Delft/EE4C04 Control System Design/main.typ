@@ -16,7 +16,8 @@
 #show: ilm.with(
     title: [Notes of Control System Design],
     author: "Gralerfics",
-    date: datetime(year: 2025, month: 10, day: 12),
+    // date: datetime(year: 2025, month: 10, day: 12),
+    date: datetime.today(),
     // abstract: [
     //     Abstract.
     // ],
