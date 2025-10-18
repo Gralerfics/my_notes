@@ -313,7 +313,7 @@ $ <equ:dmi_prony_normal_equ_matrix>
 //     #text(fill: red, "（TODO）") // 如果信号真平稳，说明这个能估计信号背后的分布；如果信号自己不争气，则只能拟合这个具体的信号。
 // ]
 
-=== An Equivalent Perspective on Pseudoinverse <sec:dmi_equivalent_perspective_on_pseudoinverse>
+=== An Equivalent Perspective from Pseudoinverse <sec:dmi_equivalent_perspective_from_pseudoinverse>
 
 上节的推导中我们自然地应用最小二乘法将问题视为优化问题处理，实际上我们也可以直接令所有的 $hat(x)[n]=x[n]$，得到一个超定方程组：
 

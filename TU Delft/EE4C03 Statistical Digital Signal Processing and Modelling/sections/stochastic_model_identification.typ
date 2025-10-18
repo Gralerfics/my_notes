@@ -17,7 +17,7 @@
     方便起见就不将后面所有方括号改成圆括号了。
 ]
 
-== Auto-regressive Moving Average Processes
+== Autoregressive Moving Average (ARMA) Processes
 
 我们先定义一种叫 ARMA 过程的随机过程。考虑使用 ARMA 模型的传递函数（@equ:signal_modelling_arma_tf）对方差为 $sigma_v^2$ 的白噪声 $v[n]$ 进行滤波，得到输出 $x[n]$。
 
@@ -294,7 +294,7 @@ $
 
 然后我们公式化求一个最小二乘解，过程也与 Prony 法相似，具体不再赘述。
 
-== Auto-regressive Processes
+== Autoregressive (AR) Processes
 
 我们又来考虑 all-pole 的情况，由于只剩下一个 $b[0]$，方程可以简化很多：
 
@@ -330,13 +330,13 @@ $
 P_x (z) = B(z) B^*(1\/z^*)
 $
 
-总结来说，就是将自相关函数 $r_x (k)$ 作 z 变换后得到功率谱 $P_x (z)$，然后进行谱分解即可得到结果，举个例子：
+总结来说，就是将自相关函数 $r_x (k)$ 作 z-变换后得到功率谱 $P_x (z)$，然后进行谱分解即可得到结果，举个例子：
 
 $
 r_x (k) = 17 delta(k) + 4[delta(k-1) + delta(k+1)]
 $
 
-z 变换得到：
+z-变换得到：
 
 $
 P_x (z) = 17 + 4z^(-1) + 4z = (4 + z^(-1))(4+z)
@@ -349,3 +349,9 @@ B(z) = 4 + z^(-1) quad "or" quad B(z) = 1 + 4z^(-1)
 $
 
 此外，还有 Durbin's method 等方法，此处不记录。
+
+// == Application: Spectrum Estimation
+
+// 直接用估计的 r_x (k) 作 z-变换 vs 估计模型参数后计算功率谱
+
+// 问题：1、可能不知道模型的类型；2、可能不知道模型的阶数

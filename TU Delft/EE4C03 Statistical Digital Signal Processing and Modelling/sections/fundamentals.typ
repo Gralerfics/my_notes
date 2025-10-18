@@ -348,6 +348,8 @@ $ hat(r)_x^((N)) (k) = 1/N sum_(n=0)^(N-1-k) x[n+k] x^*[n] $ <equ:fun_rp_ergo_au
     当然我觉得这还是需要严格的推导更能令人信服。不过前述样本自相关函数中没有依赖其他估计量，不存在自由度缺失的问题。
     
     #text(fill: red, "（TODO）")或许更需要考虑的是相同时间差的样本对是否对自相关函数值具有相等的贡献（将其视为样本，采样过程是否可视为等概率）。这一点我暂时无法深入思考，故不敢断言换成 $N-k$ 之后我们就能得到无偏估计。
+
+    #text(fill: red, "（TODO）")还有后面 Periodogram 那里也是，为什么不换成 $N-k$，有其他隐患的话这里得都删了。
 ]
 
 同样考虑时间平均等于总体平均得到定义：
@@ -488,6 +490,31 @@ $
 = Digital Signal Processing
 
 #text(fill: red, "（TODO）")主要DTFT、z变换、频域特性、稳定性、功率、能量等。
+
+== Spectral Analysis <sec:fun_dsp_sa>
+
+#text(fill: red, "（TODO）")非周期信号的频谱连续，离散信号的频谱周期；迪利克雷核，加窗，DFT；zero-padding 提高密度；zero-crossing 与分辨率；谐波高度与分辨率，其他类型窗；WSS 随机信号直接变换，平均 periodogram，bpsk 例子收敛到迪利克雷核。
+
+对于一个较长的、不满足平稳性假设的信号，我们分析它全时间上的频谱意义不大，因为它在随时间变化。所以我们通常会将信号切成小段来分析，切段的方式是直接截断，假设段外的函数值都为 $0$。我们定义 Dirichlet 核函数：
+
+$
+w_R [n] = cases(
+    1\, quad &0<=n<=N-1,
+    0\, &"otherwise"
+)
+$ <equ:fun_dsp_sa_dirichlet_kernel>
+
+截断后的信号为：
+
+$ x_N [n] = x[n] w_R [n] $
+
+时域上的乘积与频域上的卷积相关，具体地：
+
+$ X_N (omega) = 1/(2 pi) {X * W_R}(omega) $
+
+从图表和形象的角度考察这一操作：
+
+#text(fill: red, "（TODO）")W_R 的频谱，频谱搬移，将冲激函数换为带宽度的峰的直观。
 
 = Optimization <sec:fun_optimization>
 
