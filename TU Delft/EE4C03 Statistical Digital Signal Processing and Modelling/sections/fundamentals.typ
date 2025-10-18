@@ -163,7 +163,7 @@ $
 
 同前，对随机性的研究重点在于研究变化中不变的东西，如数据的统计特征，故我们还是从提供一系列统计特征的定义开始。
 
-== Statistic
+== Statistic <sec:fun_rp_statistic>
 
 === Mean
 

@@ -14,17 +14,17 @@
 
 现在，我们的目标是对给定的数字信号 $x[n]$ 进行建模，即找到一个模型 $H(z)$ 使其输出信号 $hat(x)[n]$ 能够尽可能接近目标信号 $x[n]$。
 
-== Auto-regression and Moving Average (ARMA) Model
+== Auto-regressive and Moving Average (ARMA) Model <sec:signal_modelling_arma_model>
 
 我们可以根据实际情况使用不同种类的模型来对信号建模，这里以时间序列分析常用的自回归滑动平均模型（Auto-regression and Moving Average Model）即 $"ARMA"(p, q)$ 为例。其传递函数定义如下：
 
-$ Y(z) / X(z) = H(z) = (sum_(k=0)^q b[k] z^(-k)) / (1 + sum_(k=1)^p a[k] z^(-k)) = B(z) / A(z) $
+$ Y(z) / X(z) = H(z) = (sum_(k=0)^q b[k] z^(-k)) / (1 + sum_(k=1)^p a[k] z^(-k)) = B(z) / A(z) $ <equ:signal_modelling_arma_tf>
 
 设输入和输出信号分别为 $x[n]$ 和 $y[n]$，$X(z)$ 和 $Y(z)$ 为其对应的拉普拉斯变换函数。这里形式上虽然 $a[n]$ 的索引从 $1$ 开始，但实际上可以取 $a[0] = 1$ 以得到更统一的形式。于是由定义我们有 $Y(z) A(z) = X(z) B(z)$，变换到时域即：
 
 $ a[n] * y[n] = b[n] * x[n] $
 
-展开得到一个差分方程的形式：
+展开得到经典的线性常系数差分方程（Linear Constant Coefficient Difference Equation，LCCDE）的形式：
 
 $ y[n] + sum_(k=1)^p a[k] y[n-k] = sum_(k=0)^q b[k] x[n-k] $
 

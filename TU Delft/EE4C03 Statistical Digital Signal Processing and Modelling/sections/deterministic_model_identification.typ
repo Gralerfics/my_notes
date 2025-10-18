@@ -7,9 +7,9 @@
 
 模型建立后我们还需要对其进行参数辨识，即确定参数序列 $a[k]$ 和 $b[k]$ 的值。选取参数的目标是使模型输出 $hat(x)[n]$ 尽可能接近目标信号 $x[n]$。
 
-== Least Squares (LS) Method
+== Least Squares (LS) Method <sec:dmi_ls_method>
 
-首先讨论 Deterministic Modelling，我们希望模型输出 $hat(x)[n]$ 能够精确地重现目标信号 $x[n]$，即每个采样点的值都要尽可能接近。定义误差信号 $e'[n] = x[n] - hat(x)[n]$，可以通过最小化均方误差 $cal(E)_"LS" = sum_(n=0)^infinity norm(e'[n])^2$ 来确定模型参数，如 @fig:deterministic_model_identification_diagram_ls 所示。
+首先讨论 Deterministic Modelling，我们希望模型输出 $hat(x)[n]$ 能够精确地重现目标信号 $x[n]$，即每个采样点的值都要尽可能接近。定义误差信号 $e'[n] = x[n] - hat(x)[n]$，可以通过最小化均方误差 $cal(E)_"LS" = sum_(n=0)^infinity abs(e'[n])^2$ 来确定模型参数，如 @fig:deterministic_model_identification_diagram_ls 所示。
 
 #figure(
     caption: [Diagram for deterministic model identification (intractable)]
@@ -44,7 +44,7 @@ $
 
 //     $ cal(E)_"LS" = 1/(2 pi) integral_(-pi)^pi abs(E'(e^(j omega)))^2 dif omega $
 
-//     TODO
+//     #text(fill: red, "（TODO）")
 // ]
 
 == Padé Approximation
@@ -209,7 +209,7 @@ Padé 法很直接，但显然也存在一系列问题：
 
 Padé 法将所有的自由度都用在了序列的前 $p+q+1$ 项上，而 Prony 法的想法很简单，就是降低前面这段序列的拟合要求，从而获得一个从信号整体上看更好的拟合。
 
-=== Prony Normal Equations
+=== Prony Normal Equations <equ:dmi_prony_normal_equations>
 
 我们先从比较形式化的角度来推导 Prony 法。具体地，还是借 Padé 法的想法将问题转化为线性的，如 @fig:deterministic_model_identification_diagram_pade 所示。写出整个信号误差的表达式，而不只是前 $p+q+1$ 项：
 
@@ -262,6 +262,7 @@ $ sum_(l=1)^p a[l] r_x (k, l) = -r_x (k, 0), quad k = 1, 2, dots, p $
 
 这被称为 *Prony normal equations*，写成矩阵形式是：
 
+#emphasis_equbox([
 $
 mat(
     delim: "[",
@@ -286,22 +287,31 @@ mat(
     r_x (p, 0);
 )
 $
+])
 
 记为：
 
-$ bold(R)_x dash(bold(a)) = - bold(r)_x $ <equ:dmi_prony_normal_equ_matrix>
+#emphasis_equbox([
+$
+bold(R)_x dash(bold(a)) = - bold(r)_x
+$ <equ:dmi_prony_normal_equ_matrix>
+])
 
-其中 $bold(R)_x$ 是一个 Hermitian 矩阵。
+可以发现 $bold(R)_x$ 是一个 Hermitian 矩阵。求得 $a[dot]$ 后我们就可以代回 @equ:deterministic_model_identification_error_prony，令 $n=1, 2, dots, q$ 时误差为 $0$，得到 $b[k]$。
 
 #blockquote[
-    *注意*，虽然 $r_x (k, l)$ 的定义非常像信号的样本自相关函数，但在这里本质上只是记号上的代换，不要弄错主次。
-
-    我们不是在估计自相关函数，也没有对产生信号的随机过程作任何平稳性、遍历性的假设。我们的逻辑是这样的：我们用 Prony 法自然地导出了等式，其恰好形式上可以用自相关矩阵来代换，而不是原理上要求我们需要用自相关来计算。所以我们不去纠结其公式形式上同 @equ:fun_rp_autocor_matrix 的细节差异，没有太大的意义。
-    
-    我们只需要认识到该式从定义上确实具有和自相关类似的物理意义，即信号延迟后与自身的相似程度，主要目的是拓展我们的理解。
-
-    #text(fill: red, "（TODO）") // 如果信号真平稳，说明这个能估计信号背后的分布；如果信号自己不争气，则只能拟合这个具体的信号。
+    但我们需要注意一件事，原本最小化 $e[n]$ 的问题仍然是一个联合非线性最小二乘问题，$a[dot]$ 和 $b[dot]$ 是耦合的。所以我们分两步依此求解 $a[dot]$ 和 $b[dot]$ 的方法实际上是一种简化，并*不能保证全局最小化原始误差*。
 ]
+
+// #blockquote[
+//     *注意*，虽然 $r_x (k, l)$ 的定义非常像信号的样本自相关函数，但在这里本质上只是记号上的代换，不要弄错主次。
+
+//     我们不是在估计自相关函数，也没有对产生信号的随机过程作任何平稳性、遍历性的假设。我们的逻辑是这样的：我们用 Prony 法自然地导出了等式，其恰好形式上可以用自相关矩阵来代换，而不是原理上要求我们需要用自相关来计算。所以我们不去纠结其公式形式上同 @equ:fun_rp_autocor_matrix 的细节差异，没有太大的意义。
+    
+//     我们只需要认识到该式从定义上确实具有和自相关类似的物理意义，即信号延迟后与自身的相似程度，主要目的是拓展我们的理解。
+
+//     #text(fill: red, "（TODO）") // 如果信号真平稳，说明这个能估计信号背后的分布；如果信号自己不争气，则只能拟合这个具体的信号。
+// ]
 
 === An Equivalent Perspective on Pseudoinverse <sec:dmi_equivalent_perspective_on_pseudoinverse>
 
@@ -437,7 +447,7 @@ $
 
 该角度还提供了其他有效信息：关于 $A^H A$ 这种形式的矩阵，对任意向量 $bold(a)$ 有 $bold(a)^H (A^H A) bold(a) = (bold(A a))^H (bold(A a)) = norm(bold(A a))^2 >= 0$，这说明 $A^H A$ 是半正定矩阵。
 
-由此，前述 $bold(R)_x = bold(X)_q^H bold(X)_q$ 也是（半）正定矩阵，#text(fill: red, "（TODO）")而该性质将决定 $A(z)$ 是（临界）稳定的，由此弥补了 Padé 法的一项缺陷。
+由此，前述 Hermitian 矩阵 $bold(R)_x = bold(X)_q^H bold(X)_q$ 同时也是（半）正定矩阵，而该性质将决定 $A(z)$ 是（临界）稳定的，由此弥补了 Padé 法的一项缺陷#text(fill: red, "（TODO，是吗？是否还需要是 Toeplitz？）")。
 
 此外，若 $bold(R)_x$ 为正定矩阵，则其特征值都是正数，即行列式不为零，矩阵可逆，解存在；若 $bold(R)_x$ 为包含零特征值的半正定矩阵，则奇异，但这实际上说明模型的阶数冗余，可以降低一些再尝试。
 
@@ -475,6 +485,7 @@ $ epsilon_(p, q) = r_x (0, 0) + sum_(k=1)^p a[k] r_x (0, k) $
 
 化成这种形式后我们可以将 $epsilon_(p, q)$ 统一到方程 $bold(R)_x dash(bold(a)) = - bold(r)_x$ 中去（把常量移到矩阵最左侧一列了）：
 
+#emphasis_equbox([
 $
 mat(
     delim: "[",
@@ -509,15 +520,19 @@ mat(
     0;
 )
 $
+])
 
 或（$bold(u)_1$ 为首元素为 $1$ 其他为 $0$ 的单位向量）：
 
-$ bold(R)_x bold(a) = epsilon_(p, q) bold(u)_1 $
+#emphasis_equbox([
+$
+bold(R)_x bold(a) = epsilon_(p, q) bold(u)_1
+$
+])
 
-这样的形式称为 Augmented normal equations。
+这样的形式称为 *Augmented normal equations*。
 
 #blockquote[
-    // 我们也可以从 @sec:dmi_equivalent_perspective_on_pseudoinverse 的角度用矩阵推导，更简洁明了一些：
     我们也可以用矩阵形式推导，更简洁一些。误差序列构成的向量为：
 
     $ bold(e) = bold(X)_q dash(bold(a)) + bold(x)_(q+1) $
@@ -603,9 +618,10 @@ $
 
 //     但这确实说明了一件事，即虽然 Prony 等参数辨识方法可以应用在任意信号上，但如果要其物理意义符合得好，则应该假设信号是 ...
 
-//     #text(fill: red, "（TODO）")
+//     #text(fill: red, "（TODO）")也不太对，deterministic 信号哪来的平稳性？还是只是纯记号。
 // ]
 
+#emphasis_equbox([
 $
 mat(
     delim: "[",
@@ -630,21 +646,54 @@ mat(
     r_x (p);
 )
 $
-
-// TODO 这看起来很像满足平稳性的定义，这是否意味着要用全极点模型达到较好的拟合效果（什么是好？）需要信号满足平稳性假设？也不太对，deterministic 信号哪来的平稳性？还是只是纯记号。
+])
 
 或：
 
-$ sum_(l=1)^p a[l] r_x (k - l) = -r_x (k), quad k=1, 2, dots, p $
+#emphasis_equbox([
+$
+sum_(l=1)^p a[l] r_x (k - l) = -r_x (k), quad k=1, 2, dots, p
+$
+])
 
-这被称为 All-pole normal equations。由于矩阵 $bold(R)_x$ 是共轭对称而且 Toeplitz 的，这使得我们可以使用 Levinson-Durbin 算法对它进行高效的求解。
+这被称为 *All-pole normal equations*。由于矩阵 $bold(R)_x$ 是共轭对称而且 Toeplitz 的，这使得我们可以使用 Levinson-Durbin 算法对它进行高效的求解。
 
-求得 $a[dot]$ 后我们通过 @equ:dmi_b_X0a 求得 $b[0] = x[0]$。
+按常规方法，求得 $a[dot]$ 后我们会通过 @equ:dmi_b_X0a 得 $b[0] = x[0]$。但在 @equ:dmi_prony_normal_equations 的最后我们提到 Prony 法中分步求解的方法并不保证全局最优。我们在这里修改 $b[0]$ 的取值并不一定会破坏结果的最优性，因为结果本来就不是最优的；相反，我们甚至有可能通过换一种 $b[dot]$ 的取值方式达到更好的效果。
 
-TODO
+而所谓更好的效果也不一定是误差均方值的降低，也可能综合其他因素的考量。这里的全极点模型就是一个例子，如果原信号由于噪声或其他干扰导致 $x[0]$ 的值实际上不是那么可信，为了防止整个模型参数都被这一个 $b[0] = x[0]$ 带偏，我们更倾向于令拟合信号 $hat(x)[n]$（在我们的模型中就等于单位脉冲响应 $h[n]$）与目标信号 $x[n]$ 的能量相等，相当于作一个最后的校正：
+
+$
+r_(hat(x)) (0) = r_h (0) = r_x (0)
+$
+
+推导可以得到应取 $b[0] = sqrt(epsilon_(p))$。其中，$epsilon_(p)$ 是在全极点模型中我们希望优化的目标，但要注意我们这里选择的 $epsilon_(p)$ 同 Prony 法中的 $epsilon_(p, 0)$ 有一些差别：
+
+$
+epsilon_(p) = sum_(n=0)^infinity abs(e[n])^2 != epsilon_(p, 0) = sum_(n=1)^infinity abs(e[n])^2
+$
+
+我们直接把 $e[0]$ 也算进去了。#text(fill: red, "（TODO）")关于如何推导得出该 $b[0]$ 的取值还没搞懂，参考书中称在其 5.2.3 节会讲。
 
 == Finite Data Records
 
+前面对 Prony 法的分析都基于一个假设，即 $x[n]$ 定义在整个正时间域上，从 $0$ 到 $infinity$。而现在我们需要考虑当我们只拥有 $[0, N]$ 上样本的情况。
+
+下面要介绍的两种思路通常用于全极点模型，所以我们也只默认讨论全极点模型。
+
 === Auto-correlation Method
 
+第一种方法，我们考虑对 $x[n]$ 加窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$，然后仍然直接应用 Prony 法求解。
+
+#text(fill: red, "（TODO）")
+
 === Covariance Method
+
+实际上，Auto-correlation Method 把定义域以外的部分设为 $0$ 本质上是改变了 $x[n]$ 的形态，因为 $0$ 也是正常的信号值。而在一些情况下，这样做并不能达到最好的效果。
+
+第二种 Covariance Method 的结果通常更加准确，其不对信号本身作假设，而是在优化过程中不考虑定义域以外的样本，更加自然。
+
+#text(fill: red, "（TODO）")
+
+// === Generalizations to the Covariance Method
+
+// #text(fill: red, "（TODO）")
