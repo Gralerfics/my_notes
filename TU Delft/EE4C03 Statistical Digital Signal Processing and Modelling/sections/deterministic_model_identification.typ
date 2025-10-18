@@ -491,7 +491,7 @@ mat(
     delim: "[",
     column-gap: #1.0em,
     row-gap: #0.5em,
-    augment: #(hline: 1, vline: 1),
+    augment: #(hline: 1, vline: 1, stroke: (dash: (2pt, 2pt))),
     text(fill: #blue, r_x (0, 0)), text(fill: #blue, r_x (0, 1)), text(fill: #blue, r_x (0, 2)), dots, text(fill: #blue, r_x (0, p));
     text(fill: #red, r_x (1, 0)), r_x (1, 1), r_x (1, 2), dots, r_x (1, p);
     text(fill: #red, r_x (2, 0)), r_x (2, 1), r_x (2, 2), dots, r_x (2, p);
@@ -501,7 +501,7 @@ mat(
 mat(
     delim: "[",
     row-gap: #0.5em,
-    augment: #(hline: 1),
+    augment: #(hline: 1, stroke: (dash: (2pt, 2pt))),
     text(fill: #red, 1);
     a[1];
     a[2];
@@ -512,7 +512,7 @@ mat(
 mat(
     delim: "[",
     row-gap: #0.5em,
-    augment: #(hline: 1),
+    augment: #(hline: 1, stroke: (dash: (2pt, 2pt))),
     text(fill: #blue, epsilon_(p, q));
     0;
     0;
@@ -645,7 +645,7 @@ mat(
     dots.v;
     r_x (p);
 )
-$
+$ <equ:dmi_prony_all_pole_matrix>
 ])
 
 或：
@@ -680,7 +680,7 @@ $
 
 下面要介绍的两种思路通常用于全极点模型，所以我们也只默认讨论全极点模型。
 
-=== Auto-correlation Method
+=== Auto-correlation Method <sec:dmi_finite_data_autocorrelation_method>
 
 第一种方法，我们考虑对 $x[n]$ 加窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$，然后仍然直接应用 Prony 法求解。
 
