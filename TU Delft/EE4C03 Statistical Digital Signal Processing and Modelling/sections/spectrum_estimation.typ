@@ -478,9 +478,9 @@ $
 
 系数 $9\/8$ 看似表明方差表现变差了一点，但由于片段数量 $K approx (2 N)/L$ 差不多翻了一倍，方差表现实际上是提升的。
 
-==== Summary
+=== Periodogram-based Methods Summary
 
-前面每种方法我们都分析了其均值、方差、分辨率等表现，在此做一个总结如 @tab:se_periodogram_formula_summary 所示。
+参考书中还提到了一个 Blackman-Tukey 法，此处略去不表。前面除此之外的每种方法我们都分析了其均值、方差、分辨率等表现，在此做一个总结，如 @tab:se_periodogram_formula_summary 所示。
 
 #figure(
     caption: "Properties of a few commonly used windows with length N"
@@ -524,7 +524,23 @@ $
 
 注意，其中修正周期图的 $U = 1/N sum_(n=0)^(N-1) abs(w[n])^2$，而 Welch 法中由于每个片段长度为 $L$，其 $U = 1/L sum_(n=0)^(L-1) abs(w[n])^2$。
 
-== Minimum Variance Spectrum Estimation
+参考书中定义了两个指标来衡量以上方法的表现，其一为变异性（Variablilty）：
+
+$
+cal(V) = ("Var"{hat(P)_x (e^(j omega))})/(E^2{hat(P)_x (e^(j omega))})
+$
+
+说白了就是归一化的方差。其二是品质因数（Figure of merit）：
+
+$
+cal(M) = cal(V) Delta omega
+$
+
+是变异性和分辨率的乘积，这个值越小越好。顺带一提，这里品质因数这种定义为两个量相乘的指标，一般都是把 Trade-off 的量乘起来，所以我们会发现前面这些无参估计方法的品质因数都差不太多。
+
+=== Minimum Variance (MV) Spectrum Estimation
+
+
 
 #text(fill: red, "（TODO）")书 8.3 节。
 

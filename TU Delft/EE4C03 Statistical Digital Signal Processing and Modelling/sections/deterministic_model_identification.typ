@@ -230,7 +230,7 @@ $ <equ:dmi_epsilon_pq>
 
 $
 (partial epsilon_(p, q))/(partial a^*[k]) = sum_(n=q+1)^infinity (partial [e[n] e^*[n]])/(partial a^*[k]) = sum_(n=q+1)^infinity e[n] (partial e^*[n])/(partial a^*[k]) = 0, quad k=1, 2, dots, p
-$
+$ <equ:dmi_prony_normal_equ_derivation_startpoint>
 
 由定义 @equ:deterministic_model_identification_error_prony 我们知道 $(partial e^*[n])/(partial a^*[k]) = x^*[n-k]$，代入得：
 
@@ -254,11 +254,19 @@ $
 
 为了简化表达，我们记：
 
-$ r_x (k, l) := sum_(n=q+1)^infinity x^*[n-k] x[n-l] $ <equ:deterministic_model_identification_prony_ne_rx>
+#emphasis_equbox([
+$
+r_x (k, l) := sum_(n=q+1)^infinity x^*[n-k] x[n-l]
+$ <equ:deterministic_model_identification_prony_ne_rx>
+])
 
 我们可以顺便观察到 $r_x (k, l) = r_x^* (l, k)$。将其代入原式得到：
 
-$ sum_(l=1)^p a[l] r_x (k, l) = -r_x (k, 0), quad k = 1, 2, dots, p $
+#emphasis_equbox([
+$
+sum_(l=1)^p a[l] r_x (k, l) = -r_x (k, 0), quad k = 1, 2, dots, p
+$ <equ:dmi_prony_normal_equ>
+])
 
 这被称为 *Prony normal equations*，写成矩阵形式是：
 
@@ -555,7 +563,7 @@ $
     $
 ]
 
-=== Special Case: All-pole Modelling
+== Special Case: All-pole Modelling
 
 // 回忆 @equ:deterministic_model_identification_matrix_prony，我们通过 $bold(X)_q dash(bold(a)) = - bold(x)_(q+1)$ 求解系数，而在 All-pole 模型中 $q = 0$，我们代入得到一个看起来很干净的方程组：
 
@@ -593,23 +601,92 @@ $
 // )
 // $
 
-我们来研究全极点模型（@equ:ar_model_transfer_function），它在一些物理过程中很常见。首先我们有 $q = 0$，同时注意 $x[n]$ 在 $n < 0$ 时值皆为 $0$，代入 @equ:deterministic_model_identification_prony_ne_rx 我们会发现：
+我们来研究全极点模型（@equ:ar_model_transfer_function），它在一些物理过程中很常见。
+
+=== All-pole Normal Equations
+
+首先，我们照例将求解 $a[dot]$ 的过程视作优化问题。参考 @equ:dmi_epsilon_pq 的误差定义，$q = 0$ 时我们有：
 
 $
-r_x (k+1, l+1) &= sum_(n=q+1)^infinity x^*[n-(k+1)] x[n-(l+1)] \
-&= sum_(n=1)^infinity x^*[n-1-k] x[n-1-l] \
-&= sum_(n=0)^infinity x^*[n-k] x[n-l] \
-&= x^*[-k] x[-l] + sum_(n=1)^infinity x^*[n-k] x[n-l] \
+epsilon_(p, 0) = sum_(n=1)^infinity abs(e[n])^2
+$
+
+其中 $e[n]$ 定义仍来自 @equ:deterministic_model_identification_error_prony，但由于 $n=0$ 时 $n-k<0$，故 $a[dot]$ 的系数 $x[n-k]$ 值为 $0$，只剩 $x[0] - b[0]$：
+
+$
+e[n] = cases(
+    x[0] - b[0]\, quad &n=0,
+    x[n] + sum_(k=1)^p a[k] x[n-k]\, &n>0
+)
+$
+
+这时候我们要作个妖，注意 $e[0] = x[0] - b[0]$ 对于 $a[dot]$ 可视作常数，故求解 $a[dot]$ 时最小化 $epsilon_(p, 0)$ 和最小化我们定义的一个新误差 $epsilon_(p)$ 是等价的：
+
+$
+epsilon_(p) = sum_(n=0)^infinity abs(e[n])^2
+$
+
+区别就是把 $e[0]$ 也放进去了。幸运的是，这样更换误差函数之后，我们依然会导出 Prony normal equations 的形式（见 @equ:dmi_prony_normal_equ），*但其中 $r_x (k, l)$ 的定义变化*为：
+
+$
+r_x (k, l) := sum_(n=0)^infinity x^*[n-k] x[n-l]
+$ <equ:dmi_allpole_rxkl_new>
+
+区别是求和下限从 $q + 1 = 1$ 换成了 $0$，*这是我们更换误差函数的影响*，具体的原因需要从 @equ:dmi_prony_normal_equ_derivation_startpoint 处开始用新的误差定义重新推导。
+
+#blockquote[
+    好吧其实很简单，我们换 $epsilon_(p)$ 后令其对 $a[dot]$ 偏导为零：
+
+    $
+    (partial #text(fill: red, $epsilon_(p)$))/(partial a^*[k]) = sum_(n=#text(fill: red, $0$))^infinity (partial [e[n] e^*[n]])/(partial a^*[k]) = sum_(n=#text(fill: red, $0$))^infinity e[n] (partial e^*[n])/(partial a^*[k]) = 0, quad k=1, 2, dots, p
+    $
+
+    由上面的 $e[n]$ 定义，我们还是有 $(partial e^*[n])/(partial a^*[k]) = x^*[n-k]$，因为 $n=0$ 时 $x^*[n-k]=0$，恰好和 $(partial (x[0] - b[0]))/(partial a^*[k]) = 0$ 一致，所以可以统一代入得：
+
+    $
+    sum_(n=#text(fill: red, $0$))^infinity e[n] x^*[n-k] = 0, quad k=1, 2, dots, p
+    $
+
+    继续代入 $e[n]$ 定义，依旧由于 $x^*[n-k]$ 项的存在，$n=0$ 的情况可以合并进来，直接得：
+
+    $
+    sum_(n=#text(fill: red, $0$))^infinity (x[n] + sum_(l=1)^p a[l] x[n-l]) #text(fill: blue, $x^*[n-k]$) = 0, quad k=1, 2, dots, p
+    $
+
+    移项并重排求和符号顺序可以得到：
+
+    $
+    sum_(l=1)^p a[l] 
+
+    (sum_(n=#text(fill: red, $0$))^infinity x^*[n-k] x[n-l]) = -sum_(n=q+1)^infinity x^*[n-k] x[n], quad k=dots
+    $
+
+    该式同 Prony normal equations 的形式一致，区别只是 $r_x (k, l)$ 的定义需要如 @equ:dmi_allpole_rxkl_new 中所示，变为从 $0$ 开始求和。
+]
+
+到这里我们已经得到了全极点模型情况下求解 $a[dot]$ 的 "normal equations"，但观察一下还可以发现，由于 $x[n]$ 在 $n < 0$ 时值皆为 $0$，代入 @equ:dmi_allpole_rxkl_new 有：
+
+$
+r_x (k+1, l+1) &= sum_(n=0)^infinity x^*[n-(k+1)] x[n-(l+1)] \
+&= sum_(n=0)^infinity x^*[n-1-k] x[n-1-l] \
+&= sum_(n=-1)^infinity x^*[n-k] x[n-l] \
+&= x^*[-1-k] x[-1-l] + sum_(n=0)^infinity x^*[n-k] x[n-l] \
 &= r_x (k, l), quad (forall k, l>=0)
 $
 
 由此，我们可以令：
 
 $
-r_x (k-l) := r_x (k, l)
+r_x (k-l) := r_x (k, l) = sum_(n=0)^infinity x^*[n-k] x[n-l]
 $
 
-观察可知 $r_x (k)$ 是共轭对称的，即 $r_x (k) = r_x^* (-k)$。代入 Prony normal equations（@equ:dmi_prony_normal_equ_matrix）可以得到更简洁的方程组（适用于 All-pole 模型）：
+即：
+
+#emphasis_equbox([
+$
+r_x (k) = sum_(n=0)^infinity x^*[n-k] x[n]
+$
+])
 
 // #blockquote[
 //     *再次注意*，虽然这个东西很像平稳性的定义，矩阵、向量的记号也沿用了自相关定义的符号，但仍要强调这只是形式上恰好。
@@ -620,6 +697,16 @@ $
 
 //     #text(fill: red, "（TODO）")也不太对，deterministic 信号哪来的平稳性？还是只是纯记号。
 // ]
+
+观察可知 $r_x (k)$ 是共轭对称的，即 $r_x (k) = r_x^* (-k)$。代入可以得到适用于 All-pole 模型的更简洁的方程组：
+
+#emphasis_equbox([
+$
+sum_(l=1)^p a[l] r_x (k - l) = -r_x (k), quad k=1, 2, dots, p
+$
+])
+
+或：
 
 #emphasis_equbox([
 $
@@ -648,31 +735,21 @@ mat(
 $ <equ:dmi_prony_all_pole_matrix>
 ])
 
-或：
-
-#emphasis_equbox([
-$
-sum_(l=1)^p a[l] r_x (k - l) = -r_x (k), quad k=1, 2, dots, p
-$
-])
-
 这被称为 *All-pole normal equations*。由于矩阵 $bold(R)_x$ 是共轭对称而且 Toeplitz 的，这使得我们可以使用 Levinson-Durbin 算法对它进行高效的求解。
+
+=== Issues on the Numerator Selection
 
 按常规方法，求得 $a[dot]$ 后我们会通过 @equ:dmi_b_X0a 得 $b[0] = x[0]$。但在 @equ:dmi_prony_normal_equations 的最后我们提到 Prony 法中分步求解的方法并不保证全局最优。我们在这里修改 $b[0]$ 的取值并不一定会破坏结果的最优性，因为结果本来就不是最优的；相反，我们甚至有可能通过换一种 $b[dot]$ 的取值方式达到更好的效果。
 
-而所谓更好的效果也不一定是误差均方值的降低，也可能综合其他因素的考量。这里的全极点模型就是一个例子，如果原信号由于噪声或其他干扰导致 $x[0]$ 的值实际上不是那么可信，为了防止整个模型参数都被这一个 $b[0] = x[0]$ 带偏，我们更倾向于令拟合信号 $hat(x)[n]$（在我们的模型中就等于单位脉冲响应 $h[n]$）与目标信号 $x[n]$ 的能量相等，相当于作一个最后的校正：
+而所谓更好的效果也不一定是误差均方值的降低，也可能综合其他因素的考量。这里的全极点模型就是一个例子，如果原信号由于噪声或其他干扰导致 $x[0]$ 的值实际上不是那么可信，为了防止整个模型参数都被这一个 $b[0] = x[0]$ 带偏，我们更倾向于令拟合信号 $hat(x)[n]$（在我们的模型中就等于单位脉冲响应 $h[n]$）与目标信号 $x[n]$ 的能量相等：
 
 $
 r_(hat(x)) (0) = r_h (0) = r_x (0)
 $
 
-推导可以得到应取 $b[0] = sqrt(epsilon_(p))$。其中，$epsilon_(p)$ 是在全极点模型中我们希望优化的目标，但要注意我们这里选择的 $epsilon_(p)$ 同 Prony 法中的 $epsilon_(p, 0)$ 有一些差别：
+推导可以得到应取 $b[0] = sqrt(epsilon_(p))$。
 
-$
-epsilon_(p) = sum_(n=0)^infinity abs(e[n])^2 != epsilon_(p, 0) = sum_(n=1)^infinity abs(e[n])^2
-$
-
-我们直接把 $e[0]$ 也算进去了。#text(fill: red, "（TODO）")关于如何推导得出该 $b[0]$ 的取值还没搞懂，参考书中称在其 5.2.3 节会讲。
+#text(fill: red, "（TODO）")关于如何推导得出该 $b[0]$ 的取值还没搞懂，参考书中称在其 5.2.3 节会讲。
 
 == Finite Data Records for All-pole Cases
 
@@ -682,7 +759,7 @@ $
 
 === Auto-correlation Method <sec:dmi_finite_data_autocorrelation_method>
 
-第一种方法，我们考虑对 $x[n]$ 加窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$，然后仍然直接应用 Prony 法求解。
+第一种方法，我们考虑对 $x[n]$ 加矩形窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$，然后仍然直接应用 Prony 法求解。
 
 #text(fill: red, "（TODO）")
 
