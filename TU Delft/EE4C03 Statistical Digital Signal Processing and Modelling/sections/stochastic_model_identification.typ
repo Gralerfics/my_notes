@@ -34,7 +34,7 @@
     )
 ] <fig:smi_arma_proc_diagram>
 
-这里*假设滤波器是稳定（Stable）的*，那么输出的随机过程 $x[n]$ 将会是 WSS 的#text(fill: red, "（TODO）")。由于白噪声的功率谱为 $P_v (z) = sigma_v^2$，得到 $x[n]$ 的功率谱：
+这里假设 $H(z)$ 是稳定（Stable）的，那么该模型输出的随机过程 $x[n]$ 将会是 WSS 的（证明略）。由于白噪声的功率谱为 $P_v (z) = sigma_v^2$，得到 $x[n]$ 的功率谱：
 
 $
 P_x (z) = sigma_v^2 (B(z) B^*(1\/z^*))/(A(z) A^*(1\/z^*))
@@ -46,7 +46,7 @@ $
 P_x (e^(j omega)) = sigma_v^2 abs(B(e^(j omega)))^2 / abs(A(e^(j omega)))^2
 $
 
-我们定义用于这种形式的功率谱的过程为 $"ARMA"(p, q)$ 过程。可以注意到由于对称性，其功率谱有 $2p$ 和极点和 $2q$ 个零点#text(fill: red, "（TODO）")。
+我们定义用于这种形式的功率谱的过程为 $"ARMA"(p, q)$ 过程。可以注意到由于对称性，其功率谱有 $2p$ 和极点和 $2q$ 个零点。
 
 #blockquote[
     再次澄清，@sec:signal_modelling_arma_model 中提及 ARMA 模型，此处是在说 ARMA 过程。后者是指将白噪声放入 ARMA 模型后输出信号满足的随机过程。
@@ -294,7 +294,7 @@ $
 
 然后我们公式化求一个最小二乘解，过程也与 Prony 法相似，具体不再赘述。
 
-== Autoregressive (AR) Processes
+== Autoregressive (AR) Processes <sec:smi_eyem_ar_yule_walker_method>
 
 我们又来考虑 all-pole 的情况，由于只剩下一个 $b[0]$，方程可以简化很多：
 
@@ -321,8 +321,6 @@ $
 $
 r_x (k) = sum_(l=0)^q b[l] b^*[l-k] = b[k] * b^*[-k]
 $
-
-#text(fill: red, "（TODO，书 195 页具体说明）")
 
 即有：
 

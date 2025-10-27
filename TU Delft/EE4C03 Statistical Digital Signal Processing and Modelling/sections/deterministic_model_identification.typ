@@ -674,7 +674,7 @@ $
 
 我们直接把 $e[0]$ 也算进去了。#text(fill: red, "（TODO）")关于如何推导得出该 $b[0]$ 的取值还没搞懂，参考书中称在其 5.2.3 节会讲。
 
-== Finite Data Records
+== Finite Data Records for All-pole Cases
 
 前面对 Prony 法的分析都基于一个假设，即 $x[n]$ 定义在整个正时间域上，从 $0$ 到 $infinity$。而现在我们需要考虑当我们只拥有 $[0, N]$ 上样本的情况。
 
