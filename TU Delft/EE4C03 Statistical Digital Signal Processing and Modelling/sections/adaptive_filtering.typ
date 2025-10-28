@@ -5,6 +5,6 @@
 
 = Adaptive Filtering
 
-== Least Mean Squares (LMS) Filter
+== Least Mean Squares (LMS) Algorithm
 
-== Recursive Least Squares
+== Recursive Least Squares (RLS) Algorithm

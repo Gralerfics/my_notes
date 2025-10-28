@@ -536,11 +536,11 @@ $
 
 #emphasis_equbox([
 $
-bold(R)_x bold(a) = epsilon_(p, q) bold(u)_1
+dash(bold(R))_x bold(a) = epsilon_(p, q) bold(u)_1
 $
 ])
 
-这样的形式称为 *Augmented normal equations*。
+这样的形式称为 *Augmented normal equations*。#text(fill: red, "（TODO，书上这里用了和前面一样的R_x，这里暂时加个上划线区分）")
 
 #blockquote[
     我们也可以用矩阵形式推导，更简洁一些。误差序列构成的向量为：

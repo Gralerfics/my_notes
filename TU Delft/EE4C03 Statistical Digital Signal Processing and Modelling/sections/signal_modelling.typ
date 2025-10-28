@@ -28,7 +28,7 @@ $ y[n] + sum_(k=1)^p a[k] y[n-k] = sum_(k=0)^q b[k] x[n-k] $
 
 写详细一点为：
 
-$ y[n] + a[1] y[n-1] + ... + a[p] y[n-p] = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
+$ y[n] + a[1] y[n-1] + ... + a[p] y[n-p] \ = b[0] x[n] + b[1] x[n-1] + ... + b[q] x[n-q] $
 
 显然，这个系统是典型的线性移不变（Linear Shift-Invariant，LSI）系统，具有良好的性质。
 

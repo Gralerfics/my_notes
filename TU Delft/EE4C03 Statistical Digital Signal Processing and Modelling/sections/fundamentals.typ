@@ -460,6 +460,8 @@ inline(
 1/N bold(X) bold(X)^H
 $ <equ:fun_rp_autocor_matrix>
 
+#text(fill: red, "（TODO）")没有那么多独立实现的情况下，把 $bold(x)_i$ 定义成 $[x[i], dots, x[i + L - 1]]^T$。可参考 Slides Lec11 P6。
+
 === Auto-correlation Estimation with Correlation-Ergodicity
 
 由上节可见，样本（实现）的数量 $N$ 越大，估计就越准确。但若我们只有一条样本（$N = 1$），采用这种方法的估计就将极不精确。此时，如果随机过程遍历性成立，我们就允许使用这条样本不同时间上的信息来进行估计。

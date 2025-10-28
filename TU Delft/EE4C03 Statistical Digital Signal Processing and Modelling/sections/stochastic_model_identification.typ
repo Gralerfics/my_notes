@@ -306,13 +306,13 @@ $
 
 由于不存在复杂的 $c[k]$ 的问题，可以直接沿用 Prony 法，先用除了第一个以外的式子求 $a[dot]$，可以注意到式子和 @equ:dmi_prony_all_pole_matrix 完全一样；然后再用第一个式子推得 $b[0]$。这被称为 Yule-Walker 法（什么混乱的起名方式）。
 
-再次说明，如果我们不知道目标过程的自相关，就需要从（满足遍历性假设的）样本中去估计，例如：
+#text(fill: red, "（TODO，这前头的 1/N 是？虽然好像求解 a[·] 时抵消了，b[·] 也因为直接选取，不受影响。还有星号呢？这个式子见书 P194，4.153）")再次说明，如果我们不知道目标过程的自相关，就需要从（满足遍历性假设的）样本中去估计，例如：
 
 $
-hat(r)_x (k) = 1/N sum_(n=0)^(N-1) x[n] x[n-k]
+hat(r)_x (k) = 1/N sum_(n=0)^(N-1) x[n] x^*[n-k]
 $
 
-这么一搞其实就和前面的 Auto-correlation 法（@sec:dmi_finite_data_autocorrelation_method）完全等价了，也符合直觉。
+这么一搞其实就和前面的 Auto-correlation 法（@sec:dmi_finite_data_autocorrelation_method）等价了，也符合直觉。
 
 == Moving Average Processes <sec:smi_ma_processes>
 

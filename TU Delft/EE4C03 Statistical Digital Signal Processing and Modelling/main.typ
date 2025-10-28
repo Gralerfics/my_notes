@@ -37,5 +37,5 @@
 #include "sections/deterministic_model_identification.typ"
 #include "sections/stochastic_model_identification.typ"
 #include "sections/spectrum_estimation.typ"
-#include "sections/wiener_filtering.typ"
+#include "sections/optimum_filtering.typ"
 #include "sections/adaptive_filtering.typ"

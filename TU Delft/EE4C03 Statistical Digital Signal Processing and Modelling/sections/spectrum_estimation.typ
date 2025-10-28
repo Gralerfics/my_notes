@@ -817,9 +817,9 @@ $
 
 == Parametric Spectrum Estimation
 
-=== For Autoregressive Moving Average Models
+=== For Autoregressive (AR) Models
 
-=== For Autoregressive Models
+#text(fill: red, "（TODO）")Yule-Walker Method（autocorrelation method）和 covariance method。
 
 === Frequency Estimation 
 
