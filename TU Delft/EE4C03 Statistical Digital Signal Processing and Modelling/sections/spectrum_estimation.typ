@@ -113,11 +113,13 @@ $ <equ:se_periodogram_estimator_from_X_N>
 
 将满足该定义式的功率谱估计称为*周期图*（Periodogram）。
 
-==== An Equivalent Perspective from Filter Banks
+==== An Equivalent Perspective from a Filter Bank <sec:se_periodogram_filter_bank_opinion>
 
-#text(fill: red, "（TODO）")书 396 页。先说结论。
+前面是基于 Wiener–Khinchin 定理，从 "估计自相关函数 $->$ 傅里叶变换得谱估计" 的逻辑推导周期图的定义，接下来我们换一个角度解释周期图的含义。
 
-我们定义一组长度为 $N$ 的 FIR 滤波器如下：
+一个直观的想法是，如果我们知道某个信号每个频率分量的功率值，那么我们实际上就*直接可以拼出它的功率谱密度图像*。那么如何知道一个信号某个频率分量的功率？自然地，我们可以先用一个很窄的带通滤波器把这个频率分量滤出来，然后再想办法处理得到它的功率，这里可以用上 Parseval 定理，见后。
+
+那么具体地，我们定义一组长度为 $N$ 的 FIR 滤波器如下：
 
 $
 h_i [n] = 1/N e^(j n omega_i) w_R [n] = cases(
@@ -125,6 +127,70 @@ h_i [n] = 1/N e^(j n omega_i) w_R [n] = cases(
     0\, &"otherwise"
 )
 $
+
+这些滤波器的傅里叶变换为：
+
+$
+H_i (e^(j omega)) = sum_(n=0)^(N-1) h_i [n] e^(-j n omega) = e^(-j (omega - omega_i) (N-1)\/2) sin(N (omega - omega_i)\/2)/(N sin((omega - omega_i)\/2))
+$
+
+其主瓣的带宽大致为 $Delta omega = (2 pi)/N$。
+
+#blockquote[
+    这样设计滤波器的原因是，滤波器的单位脉冲响应 $h_i [n]$ 在时域上同 $x[n]$ 卷积，对应它们的傅里叶变换 $H_i (e^(j omega))$ 和 $X(e^(j omega))$ 在频域上的乘积。而我们希望频域上它们相乘之后只留下 $X(e^(j omega))$ 在频率 $omega_i$ 处的分量，其他全部为零，相当于采了个样。所以理想情况下的 $H_i (e^(j omega))$ 应该为 $delta(omega - omega_i)$，它的时域表达式就是 $1/(2 pi) e^(j n omega_i)$。
+
+    此外，我们的序列长度有限，无法实现理想的 $h_i [n]$，只能在长度为 $N$ 处截断。这里我们设置 $e^(j n omega_i)$ 前的系数为 $1\/N$，是为了使其满足 $abs(H_i (e^(j omega)))_(omega = omega_i) = 1$，方便计算。
+]
+
+注意，我们接下来考察的是随机过程的真实功率谱密度 $P_x (e^(j omega_i))$，所以下文所有的 $x[n]$ 都是指信号背后的*随机过程*，考察其经过滤波后的整体行为，而非一个具体的信号。
+
+于是，$x[n]$ 经过 $h_i [n]$ 滤波后得到的也是一个随机过程 $y_i [n]$：
+
+$
+y_i [n] = x[n] * h_i [n] = sum_(k=n-N+1)^n x[k] h_i [n-k] = 1/N sum_(k=n-N+1)^n x[k] e^(j (n-k) omega_i)
+$
+
+由于 $abs(H_i (e^(j omega)))_(omega = omega_i) = 1$，所以在 $omega_i$ 频率点上，输入 $x[n]$ 和输出 $y_i [n]$ 的功率谱密度值应该是一致的：
+
+$
+P_x (e^(j omega_i)) = P_y (e^(j omega_i))
+$
+
+接下来我们要想办法得到这个 $P_y (e^(j omega_i))$，从而得到我们希望知道的 $P_x (e^(j omega_i))$。方法是考虑 Parseval 定理：
+
+$
+E{abs(y_i [n])^2} = 1/(2 pi) integral_(-pi)^pi P_y (e^(j omega)) abs(H_i (e^(j omega)))^2 dif omega
+$
+
+如果 $H_i (e^(j omega))$ 的带宽足够窄、旁瓣足够小，接近理想带通滤波器，那么可以认为在 passband 内 $P_y (e^(j omega)) = P_y (e^(j omega_i))$ 均匀不变，stopband 内均为零，于是：
+
+$
+E{abs(y_i [n])^2} approx 1/(2 pi) (Delta omega dot P_y (e^(j omega_i))) = 1/N P_y (e^(j omega_i)) = 1/N P_x (e^(j omega_i))
+$ <equ:se_filter_bank_estimate_psd_from_power_in_y>
+
+这个结论说明我们可以用 $y_i [n]$ 的功率来估计 $P_x (e^(j omega_i))$：
+
+$
+P_x (e^(j omega_i)) approx N E{abs(y_i [n])^2}
+$
+
+好了，由于 $y_i [n]$ 在这里代表一个随机过程，我们无法考察其具体值，所以接下来问题变成了怎么从实际的样本中估计这个功率 $hat(E){abs(y_i [n])^2}$。
+
+到这一步我们*有很多选择*，但这里是为了推导出周期图，所以我们用单点样本平均（One-point average）去估计它，令：
+
+$
+hat(E){abs(y_i [n])^2} = abs(y_i [N-1])^2 = 1/(N^2) abs(sum_(k=0)^(N-1) x[k] e^(-j k omega_i))^2
+$
+
+这实际上是非常极端、不精确的近似，即使单点样本平均确实是功率的无偏估计，但太容易受到信号实际值波动的影响。*不过可以说这里只是为了凑出周期图的定义，仅提供一种诠释方式。*用这个估计方式，最终我们得到：
+
+$
+hat(P)_x (e^(j omega_i)) = N abs(y_i [N-1])^2 = 1/N abs(sum_(k=0)^(N-1) x[k] e^(-j k omega_i))^2
+$
+
+这同 @equ:se_periodogram_estimator_from_X_N 中周期图的定义是一致的。
+
+在后面的 @sec:se_nonparam_mvse 中我们会用到和这里滤波器组类似的思路，但根据 @equ:fun_rp_filtering_power_in_y_repr_in_h_and_Rx 用自相关矩阵和滤波器系数得到更好的功率估计。
 
 ==== Performance of the Periodogram
 
@@ -286,7 +352,7 @@ hat(P)_M (e^(j omega)) = 1/(N U) abs(sum_(n=-infinity)^infinity x[n] w[n] e^(-j 
 $
 ])
 
-其中 $N$ 为窗函数的长度，常数 $U$ 为窗函数的平均能量（后续会说明这是为了使修正周期图渐近无偏）：
+其中 $N$ 为窗函数的长度，常数 $U$ 为窗函数的功率，也就是能量对时间的平均（后续会说明这是为了使修正周期图渐近无偏）：
 
 #emphasis_equbox([
 $
@@ -538,11 +604,216 @@ $
 
 是变异性和分辨率的乘积，这个值越小越好。顺带一提，这里品质因数这种定义为两个量相乘的指标，一般都是把 Trade-off 的量乘起来，所以我们会发现前面这些无参估计方法的品质因数都差不太多。
 
-=== Minimum Variance (MV) Spectrum Estimation
+=== Minimum Variance (MV) Spectrum Estimation <sec:se_nonparam_mvse>
+
+#text(fill: red, "（TODO）")按 Slides 思路来。先推了 Welch 法的，然后提出问题，改用新系数。
 
 
 
-#text(fill: red, "（TODO）")书 8.3 节。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"===================================================================="
+
+首先，我们围绕 @sec:se_periodogram_filter_bank_opinion 中将信号送入滤波器组的思路来展开。在那一节中，我们滤波器是固定好的，和数据 $x[n]$ 无关，称为 data independent 的。这种情况下，如果不巧某些滤波器旁瓣滤到的能量有点多，就会导致明显的干扰。
+
+本节中要介绍的 Minimum Variance (MV) Spectrum Estimation 方法的思路是根据输入信号 $x[n]$ 来为每个频率点设计滤波器，使得每个滤波器在滤波时：1、在目标频率点 $omega_i$ 增益为一，无损通过；2、尽可能阻止旁瓣的能量通过。由此得到更好的估计结果。
+
+我们先定义符号，令 $g_i [n]$ 是 $p$ 阶复值 FIR 带通滤波器，为了满足*第一条要求*，应有：
+
+$
+G_i (e^(j omega_i)) = sum_(n=0)^p g_i [n] e^(-j n omega_i) = 1
+$
+
+方便起见我们写成向量形式，令 $bold(g)_i = [g_i [0], g_i [1], dots, g_i [p]]^T$ 和 $bold(e)_i = [1, e^(j omega_i), dots, e^(j p omega_i)]^T$，则上述约束化为：
+
+$
+bold(g)_i^H bold(e)_i = bold(e)_i^H bold(g)_i = 1
+$
+
+*第二条要求*需要我们尽可能减小输出过程的功率，关于这个功率值，由 @equ:fun_rp_filtering_power_in_y_repr_in_h_and_Rx 有：
+
+$
+E{abs(y_i [n])^2} = bold(g)_i^H bold(R)_x bold(g)_i
+$
+
+于是，我们要最小化这个值的同时，满足前面提到的线性约束，即求解：
+
+$
+min_(bold(g)_i) bold(g)_i^H bold(R)_x bold(g)_i quad "s.t." bold(e)_i^H bold(g)_i = 1
+$
+
+该问题的解为：
+
+$
+bold(g)_i = (bold(R)_x^(-1) bold(e)_i)/(bold(e)_i^H bold(R)_x^(-1) bold(e)_i) \
+min_(bold(g)_i) bold(g)_i^H bold(R)_x bold(g)_i = 1/(bold(e)_i^H bold(R)_x^(-1) bold(e)_i)
+$
+
+#blockquote[
+    这是一个典型的可以用拉格朗日乘子法解决的优化问题，求解过程如下。令：
+
+    $
+    L(bold(g)_i, lambda) = bold(g)_i^H bold(R)_x bold(g)_i - lambda (bold(e)_i^H bold(g)_i - 1)
+    $
+
+    令其对两个参数的偏导分别为零得（$bold(R)_x$ 是 Hermitian 的）：
+
+    $
+    cases(
+        2 bold(R)_x bold(g)_i - lambda bold(e)_i = 0,
+        bold(e)_i^H bold(g)_i = 1
+    )
+    $
+
+    由第一个式子有 $bold(g)_i = lambda/2 bold(R)_x^(-1) bold(e)_i$，代入第二个式子并整理得：
+
+    $
+    lambda/2 = 1/(bold(e)_i^H bold(R)_x^(-1) bold(e)_i)
+    $
+    
+    再代回前式得到解：
+
+    $
+    bold(g)_i = (bold(R)_x^(-1) bold(e)_i)/(bold(e)_i^H bold(R)_x^(-1) bold(e)_i)
+    $
+    
+    再代回得最小值的解析式。
+]
+
+由于上面的推导对任意 $omega_i$ 都成立，所以我们可以直接将式子中的下标去掉，并写为关于 $omega$ 的函数：
+
+$
+hat(sigma)_x^2 (omega) = 1/(bold(e)^H bold(R)_x^(-1) bold(e))
+$
+
+其中 $bold(e) = [1 quad e^(j omega) quad e^(j 2 omega) quad dots quad e^(j p omega)]^T$。该过程对应的滤波器参数为：
+
+#emphasis_equbox([
+$
+bold(g) = (bold(R)_x^(-1) bold(e))/(bold(e)^H bold(R)_x^(-1) bold(e))
+$
+])
+
+但 $hat(sigma)_x^2 (omega)$ 只是输出过程的功率估计，*还不能直接作为功率谱密度估计*，我们还需要除以滤波器的带宽，原因可类比 @equ:se_filter_bank_estimate_psd_from_power_in_y。带宽有多种定义方式，我们可以直接取最简单的一种，令其代入后可使白噪声的例子得到正确的估计结果（见书第 429 页的例子）：
+
+$
+Delta/(2 pi) = 1/(p+1)
+$
+
+于是最终我们得到功率谱密度估计：
+
+#emphasis_equbox([
+$
+hat(P)_"MV" (e^(j omega)) = (hat(sigma)_x^2 (omega))/(Delta\/2 pi) = (p+1)/(bold(e)^H bold(R)_x^(-1) bold(e))
+$
+])
+
+称为 *minimum variance spectrum estimate*，注意其中使用了随机过程的自相关矩阵 $bold(R)_x$，如果我们只有样本数据，那么就需要使用估计的 $hat(bold(R))_x$：
+
+#emphasis_equbox([
+$
+hat(bold(R))_x = 1/K sum_(i=0)^(K-1) bold(x)_i bold(x)_i^H \
+bold(x)_i = [x[i] quad x[i+1] quad x[i+2] quad dots quad x[i+L-1]]^T
+$
+])
+
+这里我们是将长度为 $N$ 的信号样本交叠切分为 $K$ 段，每段长度 $L$，起点间隔只有 $D = 1$，即 $K = N - L + 1$，如此来估计样本自相关矩阵。*为了维度匹配，前面的滤波器阶数同序列长度存在关系 $L=p+1$*，即有：
+
+#emphasis_equbox([
+$
+hat(P)_"MV" (e^(j omega)) = L/(bold(e)^H bold(R)_x^(-1) bold(e))
+$
+])
+
+#blockquote[
+    #text(fill: red, "（TODO）")累了，毁灭吧。
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 == Parametric Spectrum Estimation
 

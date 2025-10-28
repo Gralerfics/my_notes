@@ -489,7 +489,9 @@ $
 
 用自相关序列 $r_x (k, l)$（@equ:deterministic_model_identification_prony_ne_rx）可简化为：
 
-$ epsilon_(p, q) = r_x (0, 0) + sum_(k=1)^p a[k] r_x (0, k) $
+$
+epsilon_(p, q) = r_x (0, 0) + sum_(k=1)^p a[k] r_x (0, k)
+$ <equ:dmi_prony_mini_error>
 
 化成这种形式后我们可以将 $epsilon_(p, q)$ 统一到方程 $bold(R)_x dash(bold(a)) = - bold(r)_x$ 中去（把常量移到矩阵最左侧一列了）：
 
@@ -671,6 +673,7 @@ r_x (k+1, l+1) &= sum_(n=0)^infinity x^*[n-(k+1)] x[n-(l+1)] \
 &= sum_(n=0)^infinity x^*[n-1-k] x[n-1-l] \
 &= sum_(n=-1)^infinity x^*[n-k] x[n-l] \
 &= x^*[-1-k] x[-1-l] + sum_(n=0)^infinity x^*[n-k] x[n-l] \
+&= 0 + sum_(n=0)^infinity x^*[n-k] x[n-l] \
 &= r_x (k, l), quad (forall k, l>=0)
 $
 
@@ -703,7 +706,7 @@ $
 #emphasis_equbox([
 $
 sum_(l=1)^p a[l] r_x (k - l) = -r_x (k), quad k=1, 2, dots, p
-$
+$ <equ:dmi_all_pole_norm_equ>
 ])
 
 或：
@@ -737,6 +740,16 @@ $ <equ:dmi_prony_all_pole_matrix>
 
 这被称为 *All-pole normal equations*。由于矩阵 $bold(R)_x$ 是共轭对称而且 Toeplitz 的，这使得我们可以使用 Levinson-Durbin 算法对它进行高效的求解。
 
+对于最小误差值的计算，类似地我们有：
+
+#emphasis_equbox([
+$
+epsilon_(p) = r_x (0) + sum_(k=1)^p a[k] r_x^*(k)
+$ <equ:dmi_all_pole_mini_error>
+])
+
+也可以和方程组一起写成类似 Augmented normal equations 的形式，此处不再赘述。
+
 === Issues on the Numerator Selection
 
 按常规方法，求得 $a[dot]$ 后我们会通过 @equ:dmi_b_X0a 得 $b[0] = x[0]$。但在 @equ:dmi_prony_normal_equations 的最后我们提到 Prony 法中分步求解的方法并不保证全局最优。我们在这里修改 $b[0]$ 的取值并不一定会破坏结果的最优性，因为结果本来就不是最优的；相反，我们甚至有可能通过换一种 $b[dot]$ 的取值方式达到更好的效果。
@@ -753,24 +766,198 @@ $
 
 == Finite Data Records for All-pole Cases
 
-前面对 Prony 法的分析都基于一个假设，即 $x[n]$ 定义在整个正时间域上，从 $0$ 到 $infinity$。而现在我们需要考虑当我们只拥有 $[0, N]$ 上样本的情况。
+前面对 Prony 法的分析都基于一个假设，即 $x[n]$ 定义在整个正时间域上，从 $0$ 到 $infinity$。而现在我们需要考虑当我们只拥有 $[0, N]$ 上的 *$N+1$ 个样本*的情况。至于为什么不是 $N$ 个样本我不知道，可能作者觉得后面的索引简洁一点吧，防止出错也这样写了，但挺难受的。
 
 下面要介绍的两种思路通常用于全极点模型，所以我们也只默认讨论全极点模型。
 
 === Auto-correlation Method <sec:dmi_finite_data_autocorrelation_method>
 
-第一种方法，我们考虑对 $x[n]$ 加矩形窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$，然后仍然直接应用 Prony 法求解。
+第一种方法称为自相关法，我们考虑对 $x[n]$ 加矩形窗，或者说视 $x[n]$ 在 $[0, N]$ 以外的部分值为 $0$：
 
-#text(fill: red, "（TODO）")
+$
+x_N [n] = cases(
+    x[n]\, quad &0<=n<=N,
+    0\, &"otherwise"
+)
+$
+
+然后我们直接应用 Prony 法求解。注意，用加窗后的 $x_N [n]$ 去估计的 $r_x (k)$ 会变为：
+
+#emphasis_equbox([
+$
+r_x (k) = sum_(n=0)^infinity x^*_N [n-k] x_N [n] = sum_(n=k)^(N-1) x^*[n-k] x[n], quad k = 0, 1, dots, p
+$ <equ:dmi_allpole_finite_autocor_rx>
+])
+
+方便展示，我们将超定方程组写出：
+
+$
+bold(X)_p dash(bold(a))_p = -bold(x)_1 \
+=> mat(
+    delim: "[",
+    // column-gap: #1.0em,
+    row-gap: #0.5em,
+    augment: #(hline: (4, 9), stroke: (dash: (2pt, 2pt))),
+    x[0], 0, 0, dots, 0;
+    x[1], x[0], 0, dots, 0;
+    x[2], x[1], x[0], dots, 0;
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[p-1], x[p-2], x[p-3], dots, x[0];
+    x[p], x[p-1], x[p-2], dots, x[1];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[N-2], x[N-3], x[N-4], dots, x[N-p-1];
+    x[N-1], x[N-2], x[N-3], dots, x[N-p];
+    x[N], x[N-1], x[N-2], dots, x[N-p+1];
+    0, x[N], x[N-1], dots, x[N-p+2];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    0, 0, 0, dots, x[N];
+)
+mat(
+    delim: "[",
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+-mat(
+    delim: "[",
+    row-gap: #0.5em,
+    augment: #(hline: (4, 9), stroke: (dash: (2pt, 2pt))),
+    x[1];
+    x[2];
+    x[3];
+    dots.v;
+    x[p];
+    x[p+1];
+    dots.v;
+    x[N-1];
+    x[N];
+    0;
+    0;
+    dots.v;
+    0;
+)
+$ <equ:dmi_allpole_finite_autocor_overdeter_equ>
+
+而 normal equations 除了 $r_x (k)$ 的定义如 @equ:dmi_allpole_finite_autocor_rx 所述修改，形式上则同前 All-pole normal equations（见 @equ:dmi_all_pole_norm_equ）：
+
+$
+mat(
+    delim: "[",
+    r_x (0), r_x^* (1), dots, r_x^* (p-1);
+    r_x (1), r_x (0), dots, r_x^* (p-2);
+    dots.v, dots.v, dots.down, dots.v;
+    r_x (p-1), r_x (p-2), dots, r_x (0);
+)
+mat(
+    delim: "[",
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+-mat(
+    delim: "[",
+    r_x (1);
+    r_x (2);
+    dots.v;
+    r_x (p);
+)
+$
+
+该法的最小误差值形式也同 All-pole 分析中的 @equ:dmi_all_pole_mini_error 一致，需修改自相关函数。
+
+自相关法将信号直接截断，即使信号在区间外值不为零，所以给出的结果是可能同实际解是*有偏差*的。
+
+#text(fill: red, "（TODO）")但该方法有一条重要的性质，可以保证所得模型是*稳定的*，对一些需要大量外推或分析的情况来说非常有用。书中称证明在第 5 章提及，此处暂略。
 
 === Covariance Method
 
-实际上，Auto-correlation Method 把定义域以外的部分设为 $0$ 本质上是改变了 $x[n]$ 的形态，因为 $0$ 也是正常的信号值。而在一些情况下，这样做并不能达到最好的效果。
+Auto-correlation Method 把定义域以外的部分设为 $0$ 本质上是改变了 $x[n]$ 的形态，因为 $0$ 也是正常的信号值。而在一些情况下，这样做并不能达到最好的效果。
 
-第二种 Covariance Method 的结果通常更加准确，其不对信号本身作假设，而是在优化过程中不考虑定义域以外的样本，更加自然。
+第二种协方差法（Covariance Method）的结果通常更加准确，其不对信号本身作假设，而是在优化过程中不考虑定义域以外的样本。
 
-#text(fill: red, "（TODO）")
+从定义误差、求解优化问题的正规流程来说，我们如果不能考虑定义域外的样本，则误差只能定义在有效区间上。由之前的误差定义，计算 $e[n]$ 需要用到 $x[n], x[n-1], dots, x[n-p]$，所以我们只能将误差定义在 $[p, N]$ 上：
+
+$
+cal(E)_p^C = sum_(n=p)^N abs(e[n])^2
+$
+
+然后我们可以用这个误差对系数求偏导，再走一遍推导过程得到 normal equations，但这里就不展开了。
+
+换超定方程组的角度来说更简单，其实就是把自相关法中涉及到定义域以外样本（如 $x[N+1]$ 等）的式子给删了。参考自相关法的超定方程组 @equ:dmi_allpole_finite_autocor_overdeter_equ，只把虚线中间的部分抠出来，就是协方差法的超定方程组：
+
+$
+mat(
+    delim: "[",
+    // column-gap: #1.0em,
+    // row-gap: #0.5em,
+    x[p-1], x[p-2], x[p-3], dots, x[0];
+    x[p], x[p-1], x[p-2], dots, x[1];
+    dots.v, dots.v, dots.v, dots.down, dots.v;
+    x[N-2], x[N-3], x[N-4], dots, x[N-p-1];
+    x[N-1], x[N-2], x[N-3], dots, x[N-p];
+)
+mat(
+    delim: "[",
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+-mat(
+    delim: "[",
+    // row-gap: #0.5em,
+    x[p];
+    x[p+1];
+    dots.v;
+    x[N-1];
+    x[N];
+)
+$
+
+而其 normal equations 则同最原始的 Prony normal equations（见 @equ:dmi_prony_normal_equ）：
+
+$
+mat(
+    delim: "[",
+    r_x (1, 1), r_x (1, 2), dots, r_x (1, p);
+    r_x (2, 1), r_x (2, 2), dots, r_x (2, p);
+    dots.v, dots.v, dots.down, dots.v;
+    r_x (p, 1), r_x (p, 2), dots, r_x (p, p);
+)
+mat(
+    delim: "[",
+    a[1];
+    a[2];
+    dots.v;
+    a[p];
+)
+=
+-mat(
+    delim: "[",
+    r_x (1, 0);
+    r_x (2, 0);
+    dots.v;
+    r_x (p, 0);
+)
+$
+
+这样做其实舍弃了 All-pole 分析中矩阵 Toeplitz 的性质。同样地，其中自相关函数需要改为有限数据的版本：
+
+$
+r_x (k, l) := sum_(n=p)^N x^*[n-k] x[n-l]
+$
+
+最小误差值形式上也同 @equ:dmi_prony_mini_error，只需修改自相关函数。
 
 // === Generalizations to the Covariance Method
 
 // #text(fill: red, "（TODO）")
+
+== Example: Channel Inversion
+
+#text(fill: red, "（TODO）")

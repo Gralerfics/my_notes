@@ -372,9 +372,15 @@ $ forall k, lim_(N -> infinity) 1/N^2 sum_(n=0)^(N-1) sum_(m=0)^(N-1) abs(r_x (n
 
 // WSS 是定义 PSD 的前提
 
-== Filtering
+== Filtering Random Processes
 
 #text(fill: red, "（TODO）")
+
+#text(fill: red, "（TODO）")若滤波器系数 $h[n]$ 有限长且在 $[0, N-1]$ 外皆为零，则输出过程的方差（功率）可以用输入过程 $x(n)$ 的自相关矩阵和滤波器系数向量来表示：
+
+$
+sigma_y^2 = E{abs(y(n))^2} = bold(h)^H bold(R)_x bold(h)
+$ <equ:fun_rp_filtering_power_in_y_repr_in_h_and_Rx>
 
 == Random Process and Digital Signals
 
