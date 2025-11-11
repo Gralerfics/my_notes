@@ -785,7 +785,7 @@ $
 
 #emphasis_equbox([
 $
-r_x (k) = sum_(n=0)^infinity x^*_N [n-k] x_N [n] = sum_(n=k)^(N-1) x^*[n-k] x[n], quad k = 0, 1, dots, p
+r_x (k) = sum_(n=0)^infinity x^*_N [n-k] x_N [n] = sum_(n=k)^N x^*[n-k] x[n], quad k = 0, 1, dots, p
 $ <equ:dmi_allpole_finite_autocor_rx>
 ])
 

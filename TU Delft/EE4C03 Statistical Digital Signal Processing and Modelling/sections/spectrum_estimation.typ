@@ -456,7 +456,7 @@ $
 然后求平均得最终的谱估计：
 
 $
-hat(P)_x (e^(j omega)) = 1/K sum_(i=1)^K hat(P)_"per"^((i)) (e^(j omega)) = 1/N sum_(i=0)^(K-1) abs(sum_(n=0)^(L-1) x_i [n] e^(-j n omega))^2
+hat(P)_x (e^(j omega)) = 1/K sum_(i=0)^(K-1) hat(P)_"per"^((i)) (e^(j omega)) = 1/N sum_(i=0)^(K-1) abs(sum_(n=0)^(L-1) x_i [n] e^(-j n omega))^2
 $
 
 下面照例评估其偏差和方差。首先，因为只是再做了一次平均，期望同前面是一样的：
@@ -575,7 +575,7 @@ $
 
             [Bartlett's \ $N = K L$],
             $display(1/N sum_(i=0)^(K-1) abs(sum_(n=0)^(L-1) x[n + i L] e^(-j omega n))^2)$,
-            $display(1/(2 pi) P_x (e^(j omega)) * abs(W_B (e^(j omega)))^2)$,
+            $display(1/(2 pi) P_x (e^(j omega)) * W_B (e^(j omega)))$,
             $display(1/K P_x^2 (e^(j omega)))$,
             $display(0.89 K (2 pi)/N)$,
 
@@ -667,6 +667,8 @@ $
 $
 bold(g)_i^H bold(e)_i = bold(e)_i^H bold(g)_i = 1
 $
+
+注意，虽然 $bold(g)_i^H bold(e)_i = (bold(e)_i^H bold(g)_i)^*$ 但这里令其为 $1$ 了，结果已知是实数所以没事，但要记得这个等式只是这里成立。
 
 *第二条要求*需要我们尽可能减小输出过程的功率，关于这个功率值，由 @equ:fun_rp_filtering_power_in_y_repr_in_h_and_Rx 有：
 

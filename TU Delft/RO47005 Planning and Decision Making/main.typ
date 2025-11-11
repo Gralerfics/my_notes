@@ -14,9 +14,9 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Statistical Digital Signal Processing and Modelling (TODO)],
+    title: [Notes of Planning and Decision Making],
     author: "Gralerfics",
-    // date: datetime(year: 2025, month: 10, day: 11),
+    // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
     // abstract: [
     //     Abstract.
@@ -32,10 +32,4 @@
     // listing-index: (enabled: true),
 )
 
-#include "sections/fundamentals.typ"
-#include "sections/signal_modelling.typ"
-#include "sections/deterministic_model_identification.typ"
-#include "sections/stochastic_model_identification.typ"
-#include "sections/spectrum_estimation.typ"
-#include "sections/optimum_filtering.typ"
-#include "sections/adaptive_filtering.typ"
+#include "sections/introduction.typ"
