@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Planning and Decision Making],
+    title: [Notes of Applied Convex Optimization],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
@@ -32,9 +32,4 @@
     // listing-index: (enabled: true),
 )
 
-#include "sections/week_1.typ"
-#include "sections/week_2.typ"
-#include "sections/week_3.typ"
-#include "sections/week_4.typ"
-#include "sections/week_5.typ"
-#include "sections/week_6.typ"
+#include "sections/introduction.typ"

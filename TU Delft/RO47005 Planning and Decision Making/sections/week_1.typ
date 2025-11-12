@@ -1,0 +1,14 @@
+#import "../generic.typ": *
+
+#import "@preview/cetz:0.4.2"
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+
+= Introduction
+
+= Representations and Transformations
+
+= Configuration Space and Planning Fundamentals
+
+= Robot Models
+
+= Local Collision Avoidance, Reactive Planning
