@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Filtering and Identification],
+    title: [Notes of Estimation and Detection],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
@@ -33,4 +33,3 @@
 )
 
 #include "sections/introduction.typ"
-#include "sections/fundamentals.typ"

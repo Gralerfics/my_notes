@@ -40,7 +40,7 @@ QR分解
 
 数值计算均值方差，ergodic，noiseProperties.m（？）
 
-（……………………………………）
+（……………………………………）下面这部分应该放下个section了。
 
 统计学估计参数theta，频率学派和贝叶斯学派，最小二乘的例子
 
@@ -48,4 +48,4 @@ QR分解
 
 P24，TODO，RLS、SLS、……
 
-== Symbols and Notations
+// == Symbols and Notations
