@@ -33,3 +33,6 @@
 )
 
 #include "sections/introduction.typ"
+#include "sections/mvue.typ"
+#include "sections/crb.typ"
+#include "sections/blue_mle.typ"
