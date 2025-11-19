@@ -12,40 +12,76 @@
 
 == Linear Algebra
 
-信号模型、最小二乘问题和解
+矩阵、向量运算
 
-矩阵运算
+向量空间、子空间
 
-奇异值分解（代入前面最小二乘得到一些结论）
+秩
 
-秩、基本子空间，和解的关系
+基本子空间
+
+逆、行列式、特征值、特征向量
 
 （半）正定
 
-QR分解
+特征值分解，奇异值分解（代入最小二乘得到一些结论），QR分解
 
-一般估计问题（信号模型、加权最小二乘和解）
+linear equations; solve.
+
+// 一般估计问题（信号模型、加权最小二乘和解）
+
+deterministic least-squares problem; solution; numerical way.
 
 == Probabilistic Theory and Random Process
 
-随机变量，均值方差相关，及其样本估计，以及性质
+=== Random Variables
 
-（多维）高斯分布，记号，σ，PDF
+随机变量
 
-（……………………………………）
+//均值方差相关，及其样本估计，以及性质
 
-随机过程，（多过程）WSS
+对于随机变量 $theta$，其均值（mean）记为 $mu_theta$，定义及样本估计为：
 
-白噪声性质，记号
+$
+mu_theta = E[theta] approx 1/N sum_(i=1)^N theta_i
+$
 
-数值计算均值方差，ergodic，noiseProperties.m（？）
+其协方差（covariance）记为 $P_theta$，定义及样本估计为（#Cre("TODO")除以N吗）：
 
-（……………………………………）下面这部分应该放下个section了。
+$
+P_theta = E[(theta - mu_theta)(theta - mu_theta)^T] approx 1/N sum_(i=1)^N (theta_i - mu_theta)(theta_i - mu_theta)^T
+$
 
-统计学估计参数theta，频率学派和贝叶斯学派，最小二乘的例子
+其自相关（autocorrelation）记为 $R_theta$，定义及样本估计为：
 
-非线性的情况，非线性最小二乘求解算法，nls.m（？）
+$
+R_theta = E[theta theta^T] approx 1/N sum_(i=1)^N theta_i theta_i^T
+$
 
-P24，TODO，RLS、SLS、……
+对于 $theta in RR^n$，$P_theta$ 和 $R_theta$ 都是半正定的 $RR^(n times n)$ 矩阵。
 
-// == Symbols and Notations
+=== Gaussian Distribution
+
+// （多维）高斯分布，记号，σ，PDF
+
+对于一个高斯随机变量 $theta in RR^n$，记为：
+
+$
+theta ~ cal(N)(theta; mu_theta, P_theta)
+$
+
+其概率密度函数为：
+
+$
+p(theta) = 1/sqrt((2 pi)^n abs(P_theta)) exp(-1/2 (theta - mu_theta)^T P_theta^(-1) (theta - mu_theta))
+$
+
+可验证其期望 $E[theta] = mu_theta$，其协方差 $E[(theta - mu_theta)(theta - mu_theta)^T] = P_theta$。
+
+=== Random Processes
+
+// 随机过程，（多过程）WSS
+
+// 白噪声性质，记号
+
+// 数值计算均值方差，ergodic，noiseProperties.m（？）

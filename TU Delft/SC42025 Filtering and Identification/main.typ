@@ -34,3 +34,5 @@
 
 #include "sections/introduction.typ"
 #include "sections/fundamentals.typ"
+#include "sections/lse.typ"
+#include "sections/kalman.typ"

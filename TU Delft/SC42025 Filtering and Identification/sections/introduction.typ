@@ -63,9 +63,11 @@ $
 
 == About System Identification
 
-TODO 黑盒和白盒
+#Cre("TODO") 黑盒和白盒
 
 === Parametric System Identification
+
+#Cre("TODO")
 
 ${(u(k), y(k))}_(k=1)^N$
 
