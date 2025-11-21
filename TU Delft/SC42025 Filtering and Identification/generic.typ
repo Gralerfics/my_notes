@@ -11,6 +11,7 @@
 #let Cre(x) = [ #text(fill: red, x) ]
 #let Cbl(x) = [ #text(fill: blue, x) ]
 #let Cpu(x) = [ #text(fill: purple, x) ]
+#let Cgy(x) = [ #text(fill: gray, x) ]
 
 #let resize_box(body) = layout(
     container => {

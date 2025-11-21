@@ -5,11 +5,6 @@
 
 = Fundamentals
 
-（TODO）Book Verhaegen: Study Chapters 1, 2(2.1-2.6), 3, 4(4.1-4.3)
-
-（TODO）Verhaegen: Sections 4.5.1 – 4.5.3 (SLS, unbiased minimum variance derivation)；Lecture notes: Sections 1–3；
-    Additional background: Manipulating the multivariate Gaussian density, Thomas B. Sch ̈on and Fredrik Lindsten, Division of Automatic Control, Link ̈oping University, Sweden, January 2011.
-
 == Linear Algebra
 
 矩阵、向量运算
@@ -38,7 +33,7 @@ deterministic least-squares problem; solution; numerical way.
 
 随机变量
 
-//均值方差相关，及其样本估计，以及性质
+// 均值方差相关，及其样本估计，以及性质
 
 对于随机变量 $theta$，其均值（mean）记为 $mu_theta$，定义及样本估计为：
 
@@ -46,13 +41,13 @@ $
 mu_theta = E[theta] approx 1/N sum_(i=1)^N theta_i
 $
 
-其协方差（covariance）记为 $P_theta$，定义及样本估计为（#Cre("TODO")除以N吗）：
+其协方差（covariance）矩阵记为 $P_theta$，定义及样本估计为（#Cre("TODO")除以N吗）：
 
 $
 P_theta = E[(theta - mu_theta)(theta - mu_theta)^T] approx 1/N sum_(i=1)^N (theta_i - mu_theta)(theta_i - mu_theta)^T
 $
 
-其自相关（autocorrelation）记为 $R_theta$，定义及样本估计为：
+其相关（correlation）矩阵记为 $R_theta$，定义及样本估计为：
 
 $
 R_theta = E[theta theta^T] approx 1/N sum_(i=1)^N theta_i theta_i^T
@@ -79,6 +74,8 @@ $
 可验证其期望 $E[theta] = mu_theta$，其协方差 $E[(theta - mu_theta)(theta - mu_theta)^T] = P_theta$。
 
 === Random Processes
+
+TODO
 
 // 随机过程，（多过程）WSS
 
