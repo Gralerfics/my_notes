@@ -32,4 +32,6 @@
     // listing-index: (enabled: true),
 )
 
-#include "sections/introduction.typ"
+#include "sections/intro_fund.typ"
+#include "sections/convexity.typ"
+#include "sections/problems.typ"

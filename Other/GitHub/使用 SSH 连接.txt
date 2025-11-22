@@ -1,0 +1,11 @@
+换了电脑需要重新生成绑定，记录一下。
+
+【1、生成 SSH 密钥】
+在 Git Bash 执行（注意替换邮箱）：ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+会询问保存路径以及 passphrase，都回车默认。
+Ubuntu 下默认应该在 ~/.ssh/id_rsa(.pub)，Windows 下默认在 C:/Users/<username>/.ssh/id_rsa(.pub)。
+
+【2、添加到 GitHub】
+Settings - SSH and GPG keys - New SSH Key，把公钥 (id_rsa.pub) 内容粘进去保存。
+
+【3、完事】

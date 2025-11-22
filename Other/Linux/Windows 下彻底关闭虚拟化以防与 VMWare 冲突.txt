@@ -1,0 +1,20 @@
+https://blog.csdn.net/duke_ding2/article/details/142499333
+
+https://blog.csdn.net/h244259402/article/details/125469749
+
+https://zhuanlan.zhihu.com/p/21525737377
+
+https://blog.csdn.net/AbrahamCui/article/details/109422297
+
+
+
+
+
+总之首先要把 hyperv 相关的东西能关的都关掉，比如功能里面的各种带虚拟、沙盘字眼的。
+
+然后最终就是下这个：
+https://www.microsoft.com/en-us/download/details.aspx?id=53337
+
+运行（应该要关闭内核隔离-内存完整性）：DG_Readiness_Tool_v3.6.ps1 -Disable
+
+然后重启，启动时 F3 禁用那些个玩意。
