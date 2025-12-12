@@ -15,12 +15,14 @@ $
 
 将模型输出 $hat(y) = F theta$，与实际输出 $y$ 做差后求最小二乘，找到使误差最小的一组模型参数 $theta$。
 
-顺便，$F$ 是包含了所有数据信息的矩阵，是一个精神上的输入 $x$，所以可以叫它 "data matrix"；相应地，$y$ 是与输入对应的测量值，就叫 "measurement vector"，以此和作业中对应。
-
 #blockquote([
-    若定要从模型有输入和输出的角度去分辨，这里只有输出 $y$ 和参数 $theta$，而无显式的输入 $x$ 会显得有一些奇怪。这里或可反过来将输入数据 $x$ 视为一个滤波器 $F$，应用到模型参数 $theta$ 上。
+    *对一般线性模型的实例注释*：
 
-    对于线性运算，我们*怎么写都是可以的*，例如这里的 $F theta$，或者将参数写成线性算子（矩阵）$Theta$ 应用到 $x$ 上写成 $Theta x$，区别只是把 $x$ 还是把 $theta$ 拆开拼成矩阵。举一个线性卷积的例子，可以写成 $F theta$：
+    若定要从模型有输入和输出的角度去分辨，这里有输出 $y$ 和参数 $theta$，而无显式的输入 $x$ 会显得有一些奇怪。但实际上，#underline[$F$ 就是包含了所有数据信息的矩阵]，是一个精神上的输入 $x$，所以可以叫它 “data matrix”；相应地，$y$ 是与输入对应的测量值，就叫 "measurement vector"。
+    
+    // 或可反过来将输入数据 $x$ 视为一个滤波器 $F$，应用到模型参数 $theta$ 上。
+
+    对于线性运算，我们*怎么写都是可以的*，例如这里的 $F theta$，或者将参数写成线性算子（矩阵）$Theta$ 应用到 $x$ 上写成 $Theta x$，区别只是把 $x$ 还是把 $theta$ 拆开拼成矩阵。举一个线性卷积（或者就 FIR 滤波器）的例子，同样是表达 $y_n = sum_(i = 1)^p theta_i x_(n-i+1)$，我们可以把它写成 $y = F theta$：
 
     $
     mat(
@@ -42,16 +44,16 @@ $
     )
     mat(
         delim: "[",
-        #Cbl($theta_1$) ;
+        #Cre($theta_1$) ;
         theta_2;
         theta_3;
         dots.v;
-        #Cre($theta_p$) ;
+        #Cbl($theta_p$) ;
     )
     := F theta
     $
     
-    也可以写成 $Theta x$：
+    也可以写成 $y = Theta x$：
 
     $
     mat(
@@ -65,9 +67,9 @@ $
     =
     mat(
         delim: "[",
-        #Cre($theta_p$), theta_(p-1), theta_(p-2), dots, #Cbl($theta_1$), 0, 0, dots, 0;
-        0, theta_p, theta_(p-1), dots, theta_2, theta_1, 0, dots, 0;
-        0, 0, theta_p, dots, theta_3, theta_2, theta_1, dots, 0;
+        #Cre($theta_1$), theta_2, theta_3, dots, #Cbl($theta_p$), 0, 0, dots, 0;
+        0, theta_1, theta_2, dots, theta_(p-1), theta_p, 0, dots, 0;
+        0, 0, theta_1, dots, theta_(p-2), theta_(p-1), theta_p, dots, 0;
         dots.v, dots.v, dots.v, dots.down, dots.v, dots.v, dots.v, dots.down, dots.v;
         0, 0, 0, dots, 0, 0, 0, dots, theta_1;
     )
@@ -86,7 +88,7 @@ $
     := Theta x
     $
 
-    *但由于我们在该问题中想要求解的是参数* $theta$，基于上述认识，将其作为显式的向量写入问题中会更方便一些。因为参数 $theta$ 作为要求解的量，求解一个矩阵比求解一个向量不直观得多。
+    #underline[但由于我们在该问题中想要求解的是参数 $theta$]，基于上述认识，将其作为向量形式写入问题中会更方便一些，求解一个矩阵比求解一个向量不直观得多。
     
     // 我们预先设定了这是一个静态模型，即输入输出数据集给定，都是 deterministic 的，所以可以任意地对 $x$ 进行操作，将其组合成一个 $F$。$x$ 是包含所有输入信息的常量，$F$ 也是包含所有输入信息的常量，只是形式不一样。
 ])
@@ -116,6 +118,10 @@ $
 视情况这个过程也可以叫校准（calibration），比如已经知道模型长什么样的传感器，在使用前需要通过类似的过程从测试数据中校准一下参数，本质也是系统辨识的过程。
 
 #blockquote([
+    *有关 “模型” 概念*：
+
+    #Cre("TODO") well，Lec3 中还写了非线性的情况
+
     前面的问题分类中，对于笼统的 "模型" 概念，都将其具象化为了*状态空间模型*（state space models），而且还是*离散*的情况。
     
     但要注意的是，状态空间模型*只是一类模型描述*，一种通用的线性系统描述形式，通常用来描述动态系统与输入输出之间的联系（动态系统，dynamic systems，即当前状态与过去状态有关的系统）。这里的离散状态空间模型涵盖了时变/时不变的离散线性系统，*但它一般无法表示*：
@@ -135,17 +141,17 @@ $
 
 == About System Identification
 
-#Cre("TODO") 黑盒和白盒
+#Cre("TODO") 见后具体章节吧。
 
 === Parametric System Identification
 
 #Cre("TODO")
 
-${(u(k), y(k))}_(k=1)^N$
+// ${(u(k), y(k))}_(k=1)^N$
 
-$
-y_k approx hat(y)(k|k-1, theta)
-$
+// $
+// y_k approx hat(y)(k|k-1, theta)
+// $
 
 === Two Schools of Linear System Identification
 

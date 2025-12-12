@@ -20,7 +20,9 @@ $
 [y]_(m times 1) = [F]_(m times n) [theta]_(n times 1) + [L]_(m times m) [epsilon]_(m times 1), quad epsilon ~ cal(N)([0]_(m times 1), I_m)
 $
 
-我们令 $epsilon$ 是服从*单位高斯分布*的（均值为 $0$，协方差为 $I$），再用一个分开的 $L$ 来允许其拓展到噪声协方差不为单位矩阵的其他情况。我们也可以直接计算 $L epsilon$ 的均值：
+我们令 $epsilon$ 是服从*单位高斯分布*的（均值为 $0$，协方差为 $I$），再用一个分开的 $L$ 来允许其拓展到噪声协方差不为单位矩阵的其他情况。
+
+我们也可以将该模型等效一下，用一个具有非单位协方差的新的 $epsilon$ 来替代 $L epsilon$ 整体。具体地，计算 $L epsilon$ 的均值：
 
 $
 E[L epsilon] = L dot E[epsilon] = L dot 0 = 0
@@ -112,7 +114,7 @@ $
 ])
 
 #blockquote([
-    #underline[关于 "加权" 的注释]：
+    *关于 "加权" 的注释*：
 
     由前 @equ:lse_note_equv_model 的思路将 $L epsilon$ 合起来。令 $epsilon' = L epsilon$，即有 $epsilon = L^(-1) epsilon'$，则 @equ:lse_wlls_basic 可化为：
 
@@ -126,9 +128,9 @@ $
     min_theta norm(epsilon)_W^2 := min_theta #Cbl($epsilon^T W epsilon$), quad s.t." "y = F theta + epsilon, quad epsilon ~ cal(N)(0, #Cbl($L L^T$))
     $
 
-    与这里的写法类似，我们之后可能在范数右下角标记 $W$ 来表示这种形式的二次型。
-
-    从这个角度来看，这里的 $W$ 表达了某种 "权重"（#underline("W")eight）的意味，其决定了 $epsilon$ 不同元素（或交叉项）在优化问题中的相对影响力大小，故该问题类型称为加权线性最小二乘问题。
+    在范数右下角标记 $W$ 来表示这种形式的二次型。从这个角度来看，这里的 $W$ 表达了某种 "权重"（#underline("W")eight）的意味，其决定了 $epsilon$ 不同元素（或交叉项）在优化问题中的相对影响力大小，故该问题类型称为加权线性最小二乘问题。
+    
+    具体一些，$W = (L L^T)^(-1)$ 其实就是等价后 $epsilon$ 的协方差的逆，表达的含义即#underline[ “哪个误差项的方差大，哪个就越不可靠，给它的权重就越小”]。
 ])
 
 == Nonlinear Least-Squares Problem
@@ -172,7 +174,7 @@ $
 #pagebreak()
 == The Stochastic Linear Least-Squares (SLS) Problem
 
-#underline[按惯例先阐明接下里要讨论的问题和前面有什么不一样]。
+#underline[按惯例先阐明接下来要讨论的问题和前面有什么不一样]。
 
 *首先*，前面（加权）线性最小二乘问题中我们都认为 $theta$ 是 deterministic 的，即是确定的数值，而我们做的事情是去估计这个数值；*现在*，我们把 $theta$ 视为一个#underline[随机变量]，我们去估计的是最终这个随机变量的统计特征（最好就是直接能估计出分布函数，包含一切统计特征）。
 
@@ -181,16 +183,18 @@ $
 #underline[那么将 $theta$ 视为随机变量的好处在哪]？是在估计的过程之中，我们可以保持更多信息，例如猜测、倾向、可能性等。
 
 #blockquote([
-    #underline[回忆一下 Kalman 滤波的图像解释]。Kalman 滤波器假设要估计的参数是一个随机变量，服从正态分布，在估计的过程中保留了其均值和协方差矩阵，每一步更新就像一个椭球在空间里转移、变形。
+    *以卡尔曼滤波的图像解释为例说明*：
+    
+    Kalman 滤波器假设要估计的参数是一个随机变量，服从正态分布，在估计的过程中保留了其均值和协方差矩阵，每一步更新就像一个椭球在空间里转移、变形。
     
     其中，协方差矩阵就可以用来保存更多关于 "对当前估计各方面的自信程度" 的信息，在每一步的更新中提供更多参考。
 
     而如果我们不保留这些统计信息，只把参数当作 deterministic 的数值去估计，那么除了最小二乘也只能最小二乘了，参考前面非线性最小二乘算法。
 ])
 
-#underline[回到问题上来]，在 Stochastic Least-Squares (SLS) 这里，我们也将 $theta$ 看作随机变量，并且关注估计过程的最开始：我们对 $theta$ 这个参数有一些最初的假设和期待，即先验的（priori）知识。
+#underline[回到问题上来]，在 Stochastic Least-Squares（SLS）这里，我们也将 $theta$ 看作随机变量，并且关注估计过程的最开始：我们对 $theta$ 这个参数有一些最初的假设和期待，即先验的（priori）知识。
 
-例如，我们相信参数 $theta$ 的均值为 $mu_theta$、协方差矩阵为 $P_theta succ.curly.eq 0$，*这就是该问题相较前面基础的最小二乘问题多出来的已知条件*，最终导致 @equ:lse_sls_solution 中的解也大变样了。后面我们会提到当先验知识无效时，这里的 SLS 问题将退化为前面的加权最小二乘形式。
+例如，我们相信参数 $theta$ 的均值为 $mu_theta$、协方差矩阵为 $P_theta succ.curly.eq 0$，*这就是该问题相较前面基础的最小二乘问题多出来的已知条件*，最终导致 @equ:lse_sls_solution 中的解也大变样了。后面我们会提到，#underline[当先验知识无效时，这里的 SLS 问题将退化为前面的加权最小二乘形式]，具体见 @sec:lse_sls_alter_form_sol 末尾。
 
 === Bayesian Probability, Prior and Posterior <sec:lse_sls_bayesian_exp>
 
@@ -221,7 +225,7 @@ $
 
 求综合这些信息之后的最优估计量 $hat(theta)$ 及其协方差 $E[(theta - hat(theta))(theta - hat(theta))^T]$。
 
-我们先直接给出#underline[该问题的解]为：
+我们*先直接给出该问题的解*为：
 
 #emphasis_equbox([
 $
@@ -244,8 +248,10 @@ E[(theta - hat(theta))(theta - hat(theta))^T] &= P_theta - P_theta F^T (F P_thet
 $ <equ:lse_sls_sol_corv_common>
 ])
 
+该解的证明见 @sec:lse_sls_deri，接下来先推导一个它的等价形式，并借助其介绍一些理解内容。
+
 #pagebreak()
-=== An Alternative Form of the Solution and the Minimal-Covariance
+=== An Alternative Form of the Solution and the Minimal-Covariance <sec:lse_sls_alter_form_sol>
 
 若 $P_theta succ 0$（即正定），我们可以将 @equ:lse_sls_sol_corv_common 中的结果协方差*改写*为：
 
@@ -255,8 +261,12 @@ E[(theta - hat(theta))(theta - hat(theta))^T] = #Cpu($(P_theta^(-1) + F^T W F)^(
 $ <equ:lse_sls_sol_corv_post>
 ])
 
+可以叫它*后验协方差* $P_"post"$，即结合了先验知识以及数据后得到的结果协方差。
+
 #blockquote([
-    欲证明则使用矩阵逆引理（Woodbury 公式）：
+    *证明*：
+
+    使用矩阵逆引理（Woodbury 公式）：
 
     $
     #Cbl($($)A + B C D#Cbl($)^(-1)$) = A^(-1) - A^(-1) B (C^(-1) + D A^(-1) B)^(-1) D A^(-1)
@@ -273,9 +283,7 @@ $ <equ:lse_sls_sol_corv_post>
     即得到 @equ:lse_sls_sol_corv_common 的形式。
 ])
 
-可以叫它*后验协方差* $P_"post"$，即结合了先验知识以及数据后得到的结果协方差。用这个后验协方差，我们可以#underline[将 @equ:lse_sls_solution 改写成一种更 "贝叶斯" 的形式]：
-
-先从 $K$ 的定义出发证明 $K = P_(theta,"post") F^T W$：
+用这个后验协方差，我们可以#underline[将 @equ:lse_sls_solution 改写成一种更 "贝叶斯" 的形式]。先从 $K$ 的定义出发证明 $K = P_(theta,"post") F^T W$：
 
 $
 K &= P_theta F^T (F P_theta F^T + W^(-1))^(-1) \
@@ -305,13 +313,17 @@ $ <equ:lse_sls_sol_bayes_like_form>
 ])
 
 #blockquote([
-    这个后验协方差实际上是先验估计 $theta ~ (mu_theta, P_theta)$ 和加权最小二乘最优估计量 $theta ~ ((F^T W F)^(-1) F^T W y, (F^T W F)^(-1))$ 这两种估计量结合后的结果。
+    *后验协方差的构成*：
 
-    *该观点即 Lec2 Slides 第 30 页中的第一点*。顺便，Slides 中都用 $~ cal(N)(dot)$ 来表示分布，但实际上这里从头到尾都#underline[没有作正态分布假设]，只是在使用均值和协方差两个性质，所以为了避免混淆，我这里就不写 $cal(N)$ 只写二元组来表示二者。
+    观察这个后验协方差的形式，它实际上是先验估计 $theta ~ (mu_theta, P_theta)$ 和加权最小二乘最优估计量 $theta ~ ((F^T W F)^(-1) F^T W y, (F^T W F)^(-1))$ 这两种估计量的协方差结合后的结果：各自逆一下加起来，再逆回去。
+    
+    顺便，Slides 中都用 $~ cal(N)(dot)$ 来表示分布，但实际上这里从头到尾都#underline[没有作正态分布假设]，只是在使用均值和协方差两个统计特征，所以为了避免混淆，我这里就不写 $cal(N)$，而是只写二元组来表示具有相应均值和协方差的分布。
+
+    #underline[该观点即 Lec2 Slides 第 30 页中的第一点。]
 ])
 
 #blockquote([
-    这个形式在某些时候比较方便，例如：
+    *随机最小二乘问题和加权最小二乘问题*：
 
     根据节首的分析，我们认定先验信息的加入是导致 SLS 问题的解发生变化的主要原因。那么显然，#underline[如果提供的先验信息没用]，或者说知不知道没区别，#underline[那么问题就应该退化为加权最小二乘问题]。我们用刚得到的解的等价形式 @equ:lse_sls_sol_bayes_like_form 可以很容易地验证这一点。
 
@@ -326,7 +338,7 @@ $ <equ:lse_sls_sol_bayes_like_form>
 
     显然，#underline[这个就是前面加权最小二乘问题的解]。顺便我们可以发现，这种情况下先验均值 $mu_theta$ 也失去意义了（全都均匀），数学上则体现为被一起消去了。
 
-    *这部分即 Lec2 Slides 第 30 页中的第二点*。
+    #underline[这部分即 Lec2 Slides 第 30 页中的第二点。]
 ])
 
 #pagebreak()
@@ -347,11 +359,11 @@ $ <equ:lse_sls_sol_bayes_like_form>
         $P_k^(-1) <- P_(k-1)^(-1) + F_k^T W_k F_k$ #comment([@equ:lse_sls_sol_corv_post])
 ]
 
-给定初始先验后，用每一个新数据对估计进行更新；对于每一条新数据，都将之前的阶段性估计结果视作当前的 "先验"，用求解 SLS 问题的方式更新均值和协方差估计。
+给定初始先验后，用每一个新数据对估计进行更新；#underline[对于每一条新数据，都将之前的阶段性估计结果视作当前的 “先验”]，用求解 SLS 问题的方式更新均值和协方差估计。
 
 // #Cre("TODO") RLS_demo.m 在哪呢？
 
-=== Derivation of Stochastic Least-Squares
+=== Derivation of Stochastic Least-Squares <sec:lse_sls_deri>
 
 接下来，我们从最小方差无偏估计量的定义，以及贝叶斯估计两个角度分别*推导*以得到 @equ:lse_sls_solution 中的结果。
 

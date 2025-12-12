@@ -7,31 +7,33 @@
 
 == Linear Algebra
 
-矩阵、向量运算
+#Cre("TODO")
 
-向量空间、子空间
+// 矩阵、向量运算
 
-秩
+// 向量空间、子空间
 
-基本子空间
+// 秩
 
-逆、行列式、特征值、特征向量
+// 基本子空间
 
-（半）正定
+// 逆、行列式、特征值、特征向量
 
-特征值分解，奇异值分解（代入最小二乘得到一些结论），QR分解
+// （半）正定
 
-linear equations; solve.
+// 特征值分解，奇异值分解（代入最小二乘，注意到 UUT 为投影阵），QR分解
 
-// 一般估计问题（信号模型、加权最小二乘和解）
+// linear equations; solve.
 
-deterministic least-squares problem; solution; numerical way.
+// deterministic least-squares problem; solution; numerical way.
 
 == Probabilistic Theory and Random Process
 
 === Random Variables
 
-随机变量
+#Cre("TODO")
+
+// 随机变量
 
 // 均值方差相关，及其样本估计，以及性质
 
@@ -41,7 +43,7 @@ $
 mu_theta = E[theta] approx 1/N sum_(i=1)^N theta_i
 $
 
-其协方差（covariance）矩阵记为 $P_theta$，定义及样本估计为（#Cre("TODO")除以N吗）：
+其协方差（covariance）矩阵记为 $P_theta$，定义及样本估计为（#Cre("TODO") 如果是用的样本均值大概是要除以 N - 1 吧）：
 
 $
 P_theta = E[(theta - mu_theta)(theta - mu_theta)^T] approx 1/N sum_(i=1)^N (theta_i - mu_theta)(theta_i - mu_theta)^T
