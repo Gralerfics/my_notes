@@ -69,19 +69,19 @@ $
 
 这是一个 Bartlett (triangular) window。
 
-#blockquote[
-    #text(fill: red, "（TODO）")为何不直接换成除以 $N-k$ 得到无偏估计？
+// #blockquote[
+//     #text(fill: red, "（TODO）")为何不直接换成除以 $N-k$ 得到无偏估计？
 
-    也许和 Parseval 一致性有关：
+//     也许和 Parseval 一致性有关：
 
-    $
-    1 / (2 pi) integral_(-pi)^pi hat(P) (omega) dif omega = hat(r)_x (0) = 1 / N sum_(n=0)^(N-1) abs(x[n])^2
-    $
+//     $
+//     1 / (2 pi) integral_(-pi)^pi hat(P) (omega) dif omega = hat(r)_x (0) = 1 / N sum_(n=0)^(N-1) abs(x[n])^2
+//     $
 
-    此外，这里似乎有一些循环定义的问题，暂时不纠结。
+//     此外，这里似乎有一些循环定义的问题，暂时不纠结。
 
-    #text(fill: red, "（TODO）")还有降低方差的考虑。以及后面有参估计时会发现如果用除以 $N-k$ 的无偏估计会导致协方差矩阵不确保正定。所以这里的方差表现差不只是量变还会有质变是吗。
-]
+//     #text(fill: red, "（TODO）")还有降低方差的考虑。以及后面有参估计时会发现如果用除以 $N-k$ 的无偏估计会导致协方差矩阵不确保正定。所以这里的方差表现差不只是量变还会有质变是吗。
+// ]
 
 接下来再对它使用傅里叶变换估计功率谱：
 
@@ -606,51 +606,7 @@ $
 
 === Minimum Variance (MV) Spectrum Estimation <sec:se_nonparam_mvse>
 
-#text(fill: red, "（TODO）")按 Slides 思路来。先推了 Welch 法的，然后提出问题，改用新系数。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"===================================================================="
+// #text(fill: red, "（TODO）")按 Slides 思路来。先推了 Welch 法的，然后提出问题，改用新系数。
 
 首先，我们围绕 @sec:se_periodogram_filter_bank_opinion 中将信号送入滤波器组的思路来展开。在那一节中，我们滤波器是固定好的，和数据 $x[n]$ 无关，称为 data independent 的。这种情况下，如果不巧某些滤波器旁瓣滤到的能量有点多，就会导致明显的干扰。
 
@@ -766,65 +722,15 @@ $
 ])
 
 #blockquote[
-    #text(fill: red, "（TODO）")累了，毁灭吧。
+    #Cre("(TODO)") 累了，毁灭吧。
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 == Parametric Spectrum Estimation
 
 === For Autoregressive (AR) Models
 
-#text(fill: red, "（TODO）")Yule-Walker Method（autocorrelation method）和 covariance method。
+#Cre("(TODO)") the Yule-Walker Method (autocorrelation method) and the covariance method.
 
-=== Frequency Estimation 
+=== Mulitple Signal Clasification (MUSIC)
 
-==== Problem Setup
-
-==== Mulitple Signal Clasification (MUSIC)
+#Cre("(TODO)")
