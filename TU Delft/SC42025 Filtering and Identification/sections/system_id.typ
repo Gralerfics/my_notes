@@ -61,11 +61,15 @@ hat(y)_k (theta) &= underbrace(H^(-1) (q) G(q), hat(G)(q|theta)) u_k + underbrac
 $ <equ:id_tfmodel_param_predictor>
 ])
 
+#blockquote([
+    关于预测 $hat(y)_k$ 的这个公式，里面却使用了 $y_k$ 的问题。它的前面算到最后没问题的话是会有 $q$ 算子的，实际用到的是 $k-1$ 或其他更前的项目而非 $y_k$，所以没问题。
+])
+
 === State Space Model
 
 $
 x_(k+1) &= A x_k + B u_k + K e_k \
-y_k &= C x_k + D u_k
+y_k &= C x_k + D u_k + e_k
 $
 
 #Cre("TODO") convert state-space model to transfer function
@@ -77,11 +81,11 @@ q x_k &= A x_k + B u_k + K e_k \
 x_k &= (q I - A)^(-1) B u_k + (q I - A)^(-1) K e_k
 $
 
-so
+so 
 
 $
 y_k &= C x_k + D u_k \
-y_k &= underbrace([C (q I - A)^(-1) B + D], G(q)) u_k + underbrace(C (q I - A)^(-1) K, H(q)) e_k
+y_k &= underbrace([C (q I - A)^(-1) B + D], G(q)) u_k + underbrace([C (q I - A)^(-1) K + I], H(q)) e_k
 $
 
 // 得到 G(q) 和 H(q)；二者是特征值xxx的不同线性变换。
@@ -161,7 +165,7 @@ hat(y)_k (theta) &= H^(-1) (q) G(q) u_k + [1 - H^(-1) (q)] y_k \
 &= (b_1 q^(-1) + dots + b_n q^(-n))/(1 + c_1 q^(-1) + dots + c_n q^(-n)) u_k + ((c_1 - a_1) q^(-1) + dots + (c_n - a_n) q^(-n))/(1 + c_1 q^(-1) + dots + c_n q^(-n)) y_k
 $
 
-这个参数化的预测子共包含 $4n$ 个参数，列举如下：#Cre("TODO 最后的 hat y 是什么")
+这个参数化的预测子共包含 $4n$ 个参数，列举如下：#Cre("TODO 最后的 hat y 是怎么个说法")
 
 $
 theta = {a_1, dots, a_n, b_1, dots, b_n, c_1, dots, c_n, hat(y)_(-1), dots, hat(y)_(-n)}
@@ -198,7 +202,7 @@ $
     delim: "[",
     1, 0, 0, dots, 0;
 ),&
-&D = 0,&
+&D = 0, \
 &hat(x)_n (theta)
 $
 

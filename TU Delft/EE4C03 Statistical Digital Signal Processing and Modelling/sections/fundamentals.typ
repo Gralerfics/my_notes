@@ -6,7 +6,7 @@
 
 = Linear Algebra
 
-#text(fill: red, "（TODO）")主要关于线性方程组的解、秩、逆、特征值、二次型与正定性、矩阵微积分等。
+#Cre("（TODO）") 主要关于线性方程组的解、秩、逆、特征值、二次型与正定性、矩阵微积分等。
 
 = Probability Theory
 
@@ -376,7 +376,7 @@ $ forall k, lim_(N -> infinity) 1/N^2 sum_(n=0)^(N-1) sum_(m=0)^(N-1) abs(r_x (n
 
 #text(fill: red, "（TODO）")
 
-#text(fill: red, "（TODO）")若滤波器系数 $h[n]$ 有限长且在 $[0, N-1]$ 外皆为零，则输出过程的功率可以用输入过程 $x(n)$ 的自相关矩阵和滤波器系数向量来表示：
+若滤波器系数 $h[n]$ 有限长且在 $[0, N-1]$ 外皆为零，则输出过程的功率可以用输入过程 $x(n)$ 的自相关矩阵和滤波器系数向量来表示：
 
 $
 sigma_y^2 = E{abs(y(n))^2} = bold(h)^H bold(R)_x bold(h)
