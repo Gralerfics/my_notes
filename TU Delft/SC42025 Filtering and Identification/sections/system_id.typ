@@ -3,9 +3,11 @@
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
+#import "@preview/ctheorems:1.1.3": *
+
 = System Identification Cycle
 
-#Cre("TODO")
+#Cre("TODO Lec6")
 
 = Prediction Error Methods
 
@@ -66,6 +68,8 @@ $ <equ:id_tfmodel_param_predictor>
 ])
 
 === State Space Model
+
+#Cre("TODO 有件重要的事，就是说明这个状态空间模型为什么要写成这个形式，有什么好处（指状态里面用 K e_k 描述噪声，输出里用一个 e_k）")
 
 $
 x_(k+1) &= A x_k + B u_k + K e_k \
@@ -277,3 +281,171 @@ MSE 的 bias-variance 分解
 = Subspace Methods
 
 #Cre("TODO")
+
+== Discussion: Identification of an Autonomous System
+
+#Cre("TODO 自动系统（即无输入，只有 A 和 C）的辨识")
+
+== Discussion: Deterministic SISO Identification with Impulse Response (Ho-Kalman)
+
+#Cre("TODO Deterministic 单输入单输出系统在已知输入为冲激响应下的辨识")
+
+== Identification with Deterministic Inputs
+
+#Cre("TODO 换成任意输入；列出式子发现多出和输入相关的项；用正交投影矩阵消除项；")
+
+模型：
+
+$
+x_(k+1) &= A x_k + B u_k \
+y_k &= C x_k + D u_k
+$
+
+若已知输入序列 ${u_k}$（#Cre("TODO 初值貌似也是要辨识的")），迭代展开可得模拟输出：
+
+$
+y_k = C A^k x_0 + sum_(j=0)^(k-1) C A^(k-1-j) B u_j + D u_k
+$
+
+由该式将一段窗口长度为 $s$ 的 $y_k$ 序列写到一个向量中得到：
+
+#let y_s_mat = $
+    mat(
+        delim: "[",
+        y_0;
+        y_1;
+        y_2;
+        dots.v;
+        y_(s-1);
+    )
+$;
+
+#let Os_mat = $
+    mat(
+        delim: "[",
+        C;
+        C A;
+        C A^2;
+        dots.v;
+        C A^(s-1);
+    )
+$;
+
+#let Ts_mat = $
+    mat(
+        delim: "[",
+        D, 0, 0, dots, 0;
+        C B, D, 0, dots, 0;
+        C A B, C B, D, dots, 0;
+        dots.v, dots.v, dots.down, dots.down, dots.v;
+        C A^(s-2) B, C A^(s-3) B, dots, C B, D;
+    )
+$;
+
+#let u_s_mat = $
+    mat(
+        delim: "[",
+        u_0;
+        u_1;
+        u_2;
+        dots.v;
+        u_(s-1);
+    )
+$;
+
+$
+#y_s_mat = underbrace(#Os_mat, cal(O)_s) x_0 + underbrace(#Ts_mat, cal(T)_s) #u_s_mat
+$
+
+滑动这个窗口得到新的 $y$ 向量并水平拼接，得到更大的表达式 #Cre("TODO 拼接等价的直觉强化")：
+
+#let Y_0sN_mat = $
+    mat(
+        delim: "[",
+        y_0, y_1, dots, y_(N-1);
+        y_1, y_2, dots, y_N;
+        dots.v, dots.v, dots.down, dots.v;
+        y_(s-1), y_s, dots, y_(N+s-2);
+    )
+$;
+
+#let X_0N_mat = $
+    mat(
+        delim: "[",
+        x_0, x_1, dots, x_(N-1);
+    )
+$;
+
+#let U_0sN_mat = $
+    mat(
+        delim: "[",
+        u_0, u_1, dots, u_(N-1);
+        u_1, u_2, dots, u_N;
+        dots.v, dots.v, dots.down, dots.v;
+        u_(s-1), u_s, dots, u_(N+s-2);
+    )
+$;
+
+$
+underbrace(#Y_0sN_mat, Y_(0,s,N)) = cal(O)_s underbrace(#X_0N_mat, X_(0,N)) + cal(T)_s underbrace(#U_0sN_mat, U_(0,s,N))
+$
+
+即：
+
+$
+Y_(0,s,N) = cal(O)_s X_(0,N) + cal(T)_s U_(0,s,N)
+$
+
+后文推导中默认简化符号如下：
+
+$
+Y = cal(O)_s X + cal(T)_s U
+$ <equ:id_ss_data_equation_with_deterministic_inputs_simplified>
+
+和前面讨论中不同的是，现在我们多出了 $cal(T)_s U$ 这一同输入有关的项，没法再像之前一样直接对 $Y$ 进行奇异值分解然后对应求解 $cal(O)_s X$。
+
+于是自然地，我们希望抹掉这个输入相关项。考虑一个可以用已知的 $U$ 算出来的东西：
+
+$
+P_U^perp = I_N - U^T (U U^T)^(-1) U
+$
+
+这一矩阵是投影矩阵 #Cre("TODO 定义，证明")，投影到 #Cre("TODO 表达") 矩阵 $U$ 的行空间的正交补上 #Cre("TODO 问号")，即有：
+
+$
+U P_U^perp = 0
+$
+
+我们给 @equ:id_ss_data_equation_with_deterministic_inputs_simplified 两边乘上它，得到：
+
+$
+Y P_U^perp = cal(O)_s X P_U^perp + cal(T)_s (U P_U^perp) = cal(O)_s X P_U^perp
+$
+
+于是输入相关项就没了。#Cre("TODO 这里还需要额外的假设，比如确保这个 P 能算")
+
+#Cre("TODO 需要一个重要结论") $"col"(Y P_U^perp) = "col"(cal(O)_s)$
+
+…… 对 $vec(U, Y)$ 作 LQ 分解：
+
+$
+mat(delim: "[", U; Y) = mat(delim: "[", L_11, 0; L_21, L_22) mat(delim: "[", Q_1^T; Q_2^T)
+$
+
+#Cre("TODO 其中") $Q_1$ 是 $"row"(U)$ 的一组正交基，$Q_2$ 是 $"row"(U)^perp$ 的一组正交基。（？）
+
+…… 反正一通 ……
+
+最后会知道 $"col"(L_22) = "col"(cal(O)_s)$，即 $L_22$ 的列空间和 $cal(O)_s$ 相同，这意味着对 $L_22$ 进行奇异值分解就可以得到 $cal(O)_s$ 的一组基。
+
+它们或许并不逐元素相同，但因为列空间相同，之间就差一个可逆变换，#Cre("TODO 我们可以辨识出和以前模型不一样 ABCD 但只是差一个状态变换的系统参数，只是状态定义变了，但功能正确，这样就行了")。
+
+奇异值分解后非零奇异值个数就是 $n$，再通过和前面讨论中类似的方法，移位相除得到 $A$，取首行得到 $C$。由此我们通过 $L_22$ 辨识得 $n$、$A$ 和 $C$。
+
+#Cre("TODO 然后？？？") 辨识得 $B$、$D$ 和 $x_0$。
+
+以上即为 MOESP 法？
+
+== TODO
+
+#Cre("TODO 考虑噪声")
