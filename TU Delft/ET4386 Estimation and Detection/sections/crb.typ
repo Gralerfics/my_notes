@@ -5,8 +5,6 @@
 
 = Cramér-Rao Lower Bound
 
-#Cre("TODO")
-
 设估计量 $hat(theta) = g(bold(x))$，其中 $bold(x) = [x[0], x[1], dots, x[N - 1]]^T$。若其为无偏估计量，则其期望应等于真值：
 
 $
