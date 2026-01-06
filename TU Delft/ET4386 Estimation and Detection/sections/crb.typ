@@ -191,3 +191,21 @@ s(bold(x);theta) = (partial ln p(bold(x); theta))/(partial theta) &= bold(h)^T b
 $
 
 即线性高斯模型的 MVU 存在并且为 $hat(theta) = (bold(h)^T bold(C)_w^(-1) bold(h))^(-1) bold(h)^T bold(C)_w^(-1) bold(x)$，其方差达到 CRLB。
+
+== Blackboard bkup
+
+$
+x = A + omega, quad omega ~ cal(N)(0, y_2 I)
+$
+
+$
+ln 1(?): ln 1/(pi A)^(1/2) - (x-A)^2/A
+$
+
+$
+ln l(?): ln 1/(pi A)^(N/2) - (sum (x[n] - A)^2)/A
+$
+
+$
+s(x, A)(?): -N/(2A) + [(sum x^2[n])/A^2-N] attach(=, t: ?) T(A) [g(x) - A], quad g(x) ~ hat(A)_"MVUE"(?)
+$

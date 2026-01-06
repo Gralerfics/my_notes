@@ -36,3 +36,6 @@
 #include "sections/mvue.typ"
 #include "sections/crb.typ"
 #include "sections/blue_mle.typ"
+#include "sections/ls.typ"
+#include "sections/bayesian.typ"
+#include "sections/wiener_kalman.typ"
