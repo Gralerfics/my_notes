@@ -7,7 +7,7 @@
 
 == Linear Algebra
 
-#Cre("TODO")
+略。
 
 // 矩阵、向量运算
 
@@ -31,19 +31,13 @@
 
 === Random Variables
 
-#Cre("TODO")
-
-// 随机变量
-
-// 均值方差相关，及其样本估计，以及性质
-
 对于随机变量 $theta$，其均值（mean）记为 $mu_theta$，定义及样本估计为：
 
 $
 mu_theta = E[theta] approx 1/N sum_(i=1)^N theta_i
 $
 
-其协方差（covariance）矩阵记为 $P_theta$，定义及样本估计为（#Cre("TODO") 如果是用的样本均值大概是要除以 N - 1 吧）：
+其协方差（covariance）矩阵记为 $P_theta$，定义及样本估计为（此处 $mu_theta$ 为均值真值而非样本均值，故前系数为 $1/N$ 而不需要 $1/(N-1)$）：
 
 $
 P_theta = E[(theta - mu_theta)(theta - mu_theta)^T] approx 1/N sum_(i=1)^N (theta_i - mu_theta)(theta_i - mu_theta)^T
@@ -59,8 +53,6 @@ $
 
 === Gaussian Distribution
 
-// （多维）高斯分布，记号，σ，PDF
-
 对于一个高斯随机变量 $theta in RR^n$，记为：
 
 $
@@ -75,12 +67,10 @@ $
 
 可验证其期望 $E[theta] = mu_theta$，其协方差 $E[(theta - mu_theta)(theta - mu_theta)^T] = P_theta$。
 
+#Cre("TODO") 联合高斯、边缘分布、一阶/二阶约束、相关性和独立性、反例、……
+
+#Cre("TODO") 相乘、除、线性变换、……
+
 === Random Processes
 
-TODO
-
-// 随机过程，（多过程）WSS
-
-// 白噪声性质，记号
-
-// 数值计算均值方差，ergodic，noiseProperties.m（？）
+略。

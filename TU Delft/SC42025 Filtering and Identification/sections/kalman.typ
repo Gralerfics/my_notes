@@ -24,3 +24,18 @@
 // TODO ... 低维状态的卡尔曼示例。
 
 // 作业 Ex2 展示了多个 measurement 一起更新和依次更新，结果是一致的。
+
+== Kalman Filtering Problem
+
+$
+x_(k+1) &= A x_k + B u_k + w_k, &quad &w_k ~ cal(N)(0, Q) \
+y_k &=  C x_k + D u_k + v_k, & &v_k ~ cal(N)(0, R)
+$
+
+== Innovation Form Representation
+
+
+
+== Asymptotic Observer Perspective
+
+

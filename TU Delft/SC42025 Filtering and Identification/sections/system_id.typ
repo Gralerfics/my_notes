@@ -67,7 +67,7 @@ $ <equ:id_tfmodel_param_predictor>
     关于预测 $hat(y)_k$ 的这个公式，里面却使用了 $y_k$ 的问题。它的前面算到最后没问题的话是会有 $q$ 算子的，实际用到的是 $k-1$ 或其他更前的项目而非 $y_k$，所以没问题。
 ])
 
-=== State Space Model
+=== State Space Model (Innovation form)
 
 #Cre("TODO 有件重要的事，就是说明这个状态空间模型为什么要写成这个形式，有什么好处（指状态里面用 K e_k 描述噪声，输出里用一个 e_k）")
 
@@ -297,50 +297,9 @@ $
 
 $
 y_k = C A^k x_0
-$
+$ <equ:id_autosys_output_x0>
 
-#Cre("TODO 自动系统（即无输入，只有 A 和 C）的辨识")
-
-#blockquote([
-    *关于想到将 $y_k$ 和 $u_k$ 拼接成数据矩阵来操作的这一整套方法的缘由*：
-
-    TODO 关于为什么这样利用这些数据，怎么想出来的，动机是什么，有什么道理。
-
-    如果不这样，其他方法是？
-
-    额，就是这么拼好像不像其他有些是最优推导出来，反而有种 MPC 滚动取指令的工程感。
-
-    好像第一：“滑动窗口”（每列）是在用一段输出序列表达一个状态 $x_k$ 的信息。
-
-    一堆窗口横向再拼，此时拼的就是不同的 $x_k$ 对应的信息。这个过程像*卷积*！时间动力学系统？
-
-    为什么拼成 Hankel 矩阵？为什么隔一个？因为状态空间模型的动力学是相邻时刻递推？
-
-    还有子空间法后面依赖系统的平移不变性，是用这个平移一格来算 $A$ 的。
-])
-
-== Discussion: Deterministic SISO Identification with Impulse Response (Ho-Kalman)
-
-#Cre("TODO Deterministic 单输入单输出系统在已知输入为冲激响应下的辨识")
-
-== Identification with Deterministic Inputs
-
-#Cre("TODO 换成任意输入；列出式子发现多出和输入相关的项；用正交投影矩阵消除项；")
-
-模型：
-
-$
-x_(k+1) &= A x_k + B u_k \
-y_k &= C x_k + D u_k
-$
-
-利用输入序列 ${u_k}$ 可以迭代展开得到模型的模拟（simulation）输出：
-
-$
-y_k = C A^k x_0 + sum_(j=0)^(k-1) C A^(k-1-j) B u_j + D u_k
-$
-
-由该式将一段窗口长度为 $s$ 的 $y_k$ 序列写到一个向量中得到：
+回到问题上，我们是已知输出序列 ${y_k}$，希望去估计系统参数和状态序列 ${x_k}$。先不考虑系统参数，如果要估计状态序列 ${x_k}$，我们一定希望*先找到未知状态序列 ${x_k}$ 和已知输出数据之间的联系*。观察前面的 @equ:id_autosys_output_x0 会发现它已经提供了这一关系，我们将一段长度为 $s$ 的输出序列 ${y_0, y_1, dots, y_(s-1)}$ 用该式代换一下：
 
 #let y_s_mat = $
     mat(
@@ -387,10 +346,45 @@ $;
 $;
 
 $
-#y_s_mat = underbrace(#Os_mat, cal(O)_s) x_0 + underbrace(#Ts_mat, cal(T)_s) #u_s_mat
+#y_s_mat = #Os_mat x_0 =: cal(O)_s x_0
 $
 
-滑动这个窗口得到新的 $y$ 向量并水平拼接，得到更大的表达式 #Cre("TODO 拼接等价的直觉强化")：
+// TODO 前面只取长度为 $s$ 的一段窗口感觉就是考虑矩阵过大
+
+这里是一段输出序列同 $x_0$ 之间的关系，那么后面的 $x_1$ 和 $x_2$ 到 $x_(N-1)$ 呢？只要时移这段输出序列窗口即可：
+
+$
+mat(
+    delim: "[",
+    y_k;
+    y_(k+1);
+    y_(k+2);
+    dots.v;
+    y_(k+s-1);
+)
+=
+mat(
+    delim: "[",
+    C A^k;
+    C A^(k+1);
+    C A^(k+2);
+    dots.v;
+    C A^(k+s-1);
+) x_0
+=
+mat(
+    delim: "[",
+    C;
+    C A;
+    C A^2;
+    dots.v;
+    C A^(s-1);
+) A^k x_0
+=
+cal(O)_s x_k
+$ <equ:id_autosys_shifted_y_x_k>
+
+于是，若我们把未知状态序列写成 $n times N$ 的矩阵（状态维数 $n$，共$N$ 个时刻的数据）：
 
 #let Y_0sN_mat = $
     mat(
@@ -408,6 +402,77 @@ $;
         x_0, x_1, dots, x_(N-1);
     )
 $;
+
+$
+#X_0N_mat
+$
+
+则*状态序列与输出数据之间的关系*一样通过水平拼接 @equ:id_autosys_shifted_y_x_k 得到：
+
+$
+underbrace(#Y_0sN_mat, Y_(0,s,N)) = cal(O)_s underbrace(#X_0N_mat, X_(0,N))
+$
+
+这被称作数据方程，即 *data equation*，是*在已知和未知之间建立起的关系*，有了该式就有依据对系统进行辨识。可以发现该式中输出数据构成了一个 Hankel 矩阵 $Y_(0,s,N)$，各副对角线上元素相等，相当密集。
+
+#blockquote([
+    *关于状态变换对数据方程形式无影响的说明*：
+
+    #Cre("TODO")
+
+    #Cre("TODO") 这说明这套子空间法对状态变换不敏感，状态定义具体是什么无所谓，……
+])
+
+以上可认为是*关于想到将 $y_k$ 拼接成数据矩阵来操作的这一整套方法的缘由*，不是 "为什么这么拼 $y_k$"，而是 "要考虑到所有的未知 $x_k$ 所以自然地得到了这种 Hankel 矩阵的形式"。
+
+*接下来*就是怎么通过这个关系来进行系统辨识。
+
+#Cre("TODO") 秩的问题，以及需要添加的假设。
+
+#Cre("TODO") 奇异值分解，对应赋值，各种方法都行，因为状态变化无所谓吗（io行为等价的状态空间模型本质都是状态定义不同？）？
+
+// #blockquote([
+//     *还有一些东西*：
+
+//     一堆窗口横向再拼，此时拼的就是不同的 $x_k$ 对应的信息。这个过程像*卷积*！时间动力学系统？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？
+
+//     还有子空间法后面依赖系统的平移不变性，是用这个平移一格来算 $A$ 的。。。。。。。。。。。。。。。。。。。。。
+
+//     $s$ 的影响？越大越好？？？？？？？？？？？？？？？
+// ])
+
+== Discussion: Deterministic SISO Identification with Impulse Response (Ho-Kalman)
+
+#Cre("TODO Deterministic 单输入单输出系统在已知输入为冲激响应下的辨识")
+
+上节中我们忽略了输入序列对系统的影响，
+
+TODO 这个真的有必要吗，直接下节？
+
+== Identification with Deterministic Inputs
+
+#Cre("TODO 换成任意输入；列出式子发现多出和输入相关的项；用正交投影矩阵消除项；")
+
+模型：
+
+$
+x_(k+1) &= A x_k + B u_k \
+y_k &= C x_k + D u_k
+$
+
+利用输入序列 ${u_k}$ 可以迭代展开得到模型的模拟（simulation）输出：
+
+$
+y_k = C A^k x_0 + sum_(j=0)^(k-1) C A^(k-1-j) B u_j + D u_k
+$
+
+由该式将一段窗口长度为 $s$ 的 $y_k$ 序列写到一个向量中得到：
+
+$
+#y_s_mat = underbrace(#Os_mat, cal(O)_s) x_0 + underbrace(#Ts_mat, cal(T)_s) #u_s_mat
+$
+
+滑动这个窗口得到新的 $y$ 向量并水平拼接，得到更大的表达式 #Cre("TODO 拼接等价的直觉强化")：
 
 #let U_0sN_mat = $
     mat(
@@ -502,3 +567,7 @@ $
 == TODO
 
 #Cre("TODO 考虑噪声")
+
+== Summary
+
+#Cre("TODO")
