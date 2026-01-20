@@ -7,6 +7,100 @@
 
 = System Identification Cycle
 
+#figure(
+    caption: [System identification workflow]
+)[
+    #resize_box([
+        #diagram(
+            spacing: (12mm, 10mm),
+            node-stroke: 0.8pt,
+            edge-stroke: 0.8pt,
+
+            // ----------------------------
+            // Main flow (top row)
+            // ----------------------------
+            node((-12, 0), [Start], shape: "rect", inset: 6pt),
+
+            node((-7, 0), [Experiment
+    Design], shape: "rect", inset: 8pt),
+
+            node((-2, 0), [Experiment], shape: "rect", inset: 8pt),
+
+            node((3, 0), [Data pre-
+    processing], shape: "rect", inset: 8pt),
+
+            node((8, 0), [Fit model
+    to data], shape: "rect", inset: 8pt),
+
+            node((13, 0), [Model
+    validation], shape: "rect", inset: 8pt),
+
+            node((18, 0), [ok?], shape: "rect", inset: 8pt),
+
+            node((23, 0), [End], shape: "rect", inset: 6pt),
+
+            // top row arrows
+            edge((-12, 0), (-7, 0), "-|>"),
+            edge((-7, 0), (-2, 0), "-|>"),
+            edge((-2, 0), (3, 0), "-|>"),
+            edge((3, 0), (8, 0), "-|>"),
+            edge((8, 0), (13, 0), "-|>"),
+            edge((13, 0), (18, 0), "-|>"),
+            edge((18, 0), (23, 0), "-|>", [Yes], label-pos: 0.6),
+
+            // ----------------------------
+            // Side box: Model structure selection (below middle)
+            // ----------------------------
+            node((5.5, -3.2), [Model
+    structure
+    selection], shape: "rect", inset: 8pt),
+
+            // Upward arrow from selection to "Fit model to data"
+            edge((5.5, -3.2), (8, 0), "-|>"),
+
+            // ----------------------------
+            // Feedback arrows to "Model structure selection"
+            // (from Data pre-processing, Fit model, Validation)
+            // ----------------------------
+            // from Data pre-processing down to selection
+            edge((3, 0), (3, -3.2), "-|>"),
+            // from Fit model to data down to selection (as in figure, a short vertical)
+            edge((8, 0), (8, -3.2), "-|>"),
+            // from Model validation down to selection
+            edge((13, 0), (13, -3.2), "-|>"),
+
+            // connect those verticals into the selection box (horizontal feeds)
+            edge((3, -3.2), (5.5, -3.2), "-|>"),
+            edge((8, -3.2), (5.5, -3.2), "-|>"),
+            edge((13, -3.2), (5.5, -3.2), "-|>"),
+
+            // ----------------------------
+            // Global "No" loop back (bottom frame-like loop)
+            // ----------------------------
+            // From decision diamond down
+            edge((18, 0), (18, -6.2), "-|>", [No], label-pos: 0.4),
+
+            // Bottom horizontal back to far left
+            edge((18, -6.2), (-9.5, -6.2), "-|>"),
+
+            // Go up to "Experiment Design" (left vertical)
+            edge((-9.5, -6.2), (-9.5, 0), "-|>"),
+
+            // "taps" up into the three boxes (as in the picture)
+            // Up arrows into Experiment Design / Experiment / Data pre-processing
+            edge((-7, -6.2), (-7, 0), "-|>"),
+            edge((-2, -6.2), (-2, 0), "-|>"),
+            edge((3, -6.2), (3, 0), "-|>"),
+
+            // Make the bottom rail explicit between those tap points
+            edge((-9.5, -6.2), (-7, -6.2), "-"),
+            edge((-7, -6.2), (-2, -6.2), "-"),
+            edge((-2, -6.2), (3, -6.2), "-"),
+            edge((3, -6.2), (18, -6.2), "-"),
+        )
+    ])
+]
+
 #Cre("TODO Lec6")
 
 = Prediction Error Methods
