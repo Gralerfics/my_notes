@@ -53,13 +53,13 @@ $
     此外，匹配滤波器在第 $N-1$ 个输出#underline[最大化信噪比（SNR）]，也即最大化挠度系数和 $P_"D"$，是 deterministic 信号 NP 检测器的#underline[最优实现]。具体一些，我们可以分析匹配滤波器的输出信噪比：
 
     $
-    eta = (E^2(y[N-1]; cal(H)_1))/("var"(y[N-1]; cal(H)_1))
+    eta = (EE^2(y[N-1]; cal(H)_1))/("var"(y[N-1]; cal(H)_1))
     $
 
     记 $bold(s) = [s[0], dots, s[N-1]]^T$，$bold(w) = [w[0], dots, w[N-1]]^T$，$bold(h) = [h[N-1], dots, h[0]]^T$，于是有：
 
     $
-    eta = (bold(h)^T bold(s))^2/(E[(bold(h)^T bold(w))^2]) = (bold(h)^T bold(s))^2/(bold(h)^T E(bold(w) bold(w)^T) bold(h)) = (bold(h)^T bold(s))^2/(bold(h)^T sigma^2 I bold(h)) = 1/sigma^2 (bold(h)^T bold(s))^2/(bold(h)^T bold(h))
+    eta = (bold(h)^T bold(s))^2/(EE[(bold(h)^T bold(w))^2]) = (bold(h)^T bold(s))^2/(bold(h)^T EE(bold(w) bold(w)^T) bold(h)) = (bold(h)^T bold(s))^2/(bold(h)^T sigma^2 I bold(h)) = 1/sigma^2 (bold(h)^T bold(s))^2/(bold(h)^T bold(h))
     $
 
     由 Cauchy-Schwarz 不等式有 $(bold(h)^T bold(s))^2 <= (bold(h)^T bold(h))(bold(s)^T bold(s))$，当且仅当 $bold(h) = c bold(s)$ 时取等号，于是有：
@@ -131,4 +131,4 @@ $
 
 === Summary
 
-#Cre("TODO") P43 起。
+#Cre("TODO") P43 起，后面有总 summary 这里还要吗。

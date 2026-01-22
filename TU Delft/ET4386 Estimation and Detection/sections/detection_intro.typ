@@ -22,7 +22,7 @@
 定义挠度系数（deflection coefficient）为：
 
 $
-d^2 = [E(T; cal(H)_1) - E(T; cal(H)_0)]^2 / "var"(T; cal(H)_0)
+d^2 = [EE (T; cal(H)_1) - EE (T; cal(H)_0)]^2 / "var"(T; cal(H)_0)
 $ <eq:d_intro_defletion_coeff>
 
 从形式上看，挠度系数包含了两方面观察，一是两类数据应用 $T$ 映射后落点中心的距离（越远越好），二是零假设数据映射后方差的大小（越小越好，越不易交叠）。
@@ -281,7 +281,7 @@ $
 由前 @eq:d_intro_defletion_coeff 我们可以计算挠度系数：
 
 $
-d^2 = [E(T; cal(H)_1) - E(T; cal(H)_0)]^2 / "var"(T; cal(H)_0) = (A - 0)^2/(sigma^2\/N) = (N A^2) / sigma^2
+d^2 = [EE (T; cal(H)_1) - EE (T; cal(H)_0)]^2 / "var"(T; cal(H)_0) = (A - 0)^2/(sigma^2\/N) = (N A^2) / sigma^2
 $
 
 还可以注意到 $P_"D"$ 随挠度系数单调增长，都表征检测策略表现的好坏。
@@ -371,7 +371,7 @@ $
 令 $C_(i j)$ 为将 $cal(H)_j$ 的情况判成 $cal(H)_j$ 的成本，然后最小化贝叶斯风险（Bayes risk）：
 
 $
-R = E[C] = sum_(i=0)^i sum_(j=0)^1 C_(i j)"Pr"(cal(H)_i; cal(H)_j) Pr(cal(H)_j)
+R = EE[C] = sum_(i=0)^i sum_(j=0)^1 C_(i j)"Pr"(cal(H)_i; cal(H)_j) Pr(cal(H)_j)
 $
 
 如果 $C_10 > C_00$ 且 $C_01 > C_11$（这两个条件可以理解为错误的成本应当比正确的要高），则该条件下最优检测器的判决条件为：

@@ -46,3 +46,7 @@ $
 // 还是 NP，算出最终完全版形式，可以分别退化到之前的问题。
 
 #Cre("TODO")
+
+== Summary
+
+#Cre("TODO") 总结一下，信号 deterministic/stochastic 以及噪声 white/colored，共四种组合的结论，以及实现的框图。
