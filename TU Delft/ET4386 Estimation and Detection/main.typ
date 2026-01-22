@@ -39,3 +39,7 @@
 #include "sections/ls.typ"
 #include "sections/bayesian.typ"
 #include "sections/wiener_kalman.typ"
+#include "sections/detection_intro.typ"
+#include "sections/detection_deterministic.typ"
+#include "sections/detection_stochastic.typ"
+#include "sections/detection_cht.typ"

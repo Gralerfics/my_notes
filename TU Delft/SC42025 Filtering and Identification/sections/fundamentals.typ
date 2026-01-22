@@ -7,7 +7,7 @@
 
 == Linear Algebra
 
-略。
+#Cre("TODO") 关于舒尔补。
 
 // 矩阵、向量运算
 
@@ -68,6 +68,11 @@ $
 可验证其期望 $E[theta] = mu_theta$，其协方差 $E[(theta - mu_theta)(theta - mu_theta)^T] = P_theta$。
 
 #Cre("TODO") 联合高斯、边缘分布、一阶/二阶约束、相关性和独立性、反例、……
+// 两个反例：各自高斯 + 二阶不相关，不能说明独立
+// #image("/assets/image-19.png")
+// #image("/assets/image-20.png")
+// 继续问：二阶以上的特征如何具象化，具体是什么样子的存在？
+// 以及 kalman 中题设是联合高斯，这才能推导出不相关 -> 独立，否则不行
 
 #Cre("TODO") 相乘、除、线性变换、……
 

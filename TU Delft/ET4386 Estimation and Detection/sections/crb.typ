@@ -3,7 +3,7 @@
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-= Cramér-Rao Lower Bound (CRLB)
+== Cramér-Rao Lower Bound (CRLB)
 
 设估计量 $hat(theta) = g(bold(x))$，其中 $bold(x) = [x[0], x[1], dots, x[N - 1]]^T$。若其为无偏估计量，则其期望应等于真值：
 
@@ -17,7 +17,7 @@ $
 
 要引出定理，首先来准备一些东西。
 
-== Observations
+=== Observations
 
 首先的首先，回到解决估计问题过程本身，我们实际上是在概率分布的似然函数上求最大值。这里的*似然函数*是指概率关于参数变化的函数，它在表达式上和概率密度函数 $p(bold(x); theta)$ 可以说是相同的，只不过我们此时认为它的*自变量是参数 $theta$* 而非概率密度函数中的 $bold(x)$。
 
@@ -29,7 +29,7 @@ $
 
 // #Cre("TODO") 例如
 
-== Score Function and Regularity Conditions
+=== Score Function and Regularity Conditions
 
 定义*得分函数*（score function）为*对数似然函数的梯度*（即对参数的一阶导数）：
 
@@ -83,7 +83,7 @@ $ <equ:crb_regularity_cond>
     #underline[正则条件是对*模型自洽性*的要求，也是后面 Fisher 信息有意义的前提条件。]不过不满足正则条件不意味着就不合逻辑，只是接下来 Fisher 信息和 CRLB 这一套不再适用。// 例如 $x~"Uniform"(0, theta)$，参数在这里决定了分布的边界，“数据能否出现” 本身就是一种信息，且不被包含于后面的 Fisher 信息中，不能使用这一套方法讨论，也确实不满足正规条件。
 ])
 
-== Fisher Information
+=== Fisher Information
 
 *在满足前述正则条件的前提下*，我们可以证明得分函数的方差等于 Fisher information $I(theta)$：
 
@@ -107,7 +107,7 @@ $
 
 由定义，可以注意到 Fisher 信息有一些性质，例如*非负性*，以及*对独立观测的可加性*（#Cre("TODO") P15）。
 
-== CRLB Theorem
+=== CRLB Theorem
 
 如果参数（待估计量）$theta$ 的分布 $p(bold(x); theta)$ 满足 @equ:crb_regularity_cond 的正则条件，则该参数的任何无偏估计量 $hat(theta)$ 的方差存在下界：
 
@@ -119,13 +119,13 @@ $
 
 如果某个无偏估计量的方差恰好等于该下界，则说明其已经充分有效地利用了观测数据中关于参数的所有信息，即可被称为*最小方差无偏估计量*。
 
-== Find the MVU Estimator <sec:ed_crb_find_the_mvu_estimator>
+=== Find the MVU Estimator <sec:ed_crb_find_the_mvu_estimator>
 
 借助 CRLB 定理，我们可以求解一些特定问题的 MVUE。
 
 #Cre("TODO")
 
-== CRLB for the General Gaussian Model
+=== CRLB for the General Gaussian Model
 
 高斯模型是非常常见的信号模型，由确定模型以及和一个高斯噪声叠加而成。接下来我们讨论在高斯假设下的 CRLB，设噪声为高斯分布：
 
@@ -169,7 +169,7 @@ $
 "var"(hat(theta)) >= 1 / ((partial bold(h)^T (theta))/(partial theta) bold(C)_w^(-1) (partial bold(h) (theta))/(partial theta))
 $
 
-== CRLB for the Linear Gaussian Model
+=== CRLB for the Linear Gaussian Model
 
 进一步，考虑线性高斯模型：
 
@@ -192,7 +192,7 @@ $
 
 即线性高斯模型的 MVU 存在并且为 $hat(theta) = (bold(h)^T bold(C)_w^(-1) bold(h))^(-1) bold(h)^T bold(C)_w^(-1) bold(x)$，其方差达到 CRLB。
 
-== Blackboard bkup
+=== Blackboard bkup
 
 $
 x = A + omega, quad omega ~ cal(N)(0, y_2 I)

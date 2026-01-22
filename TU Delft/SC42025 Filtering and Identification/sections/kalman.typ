@@ -293,6 +293,16 @@ $
 
 我们就可以直接设计好一个固定的 Kalman 增益，不用再随时间动态计算。
 
+// #image("/assets/image-4.png")
+// #image("/assets/image-5.png")
+// #image("/assets/image-6.png")
+// #image("/assets/image-7.png")
+
+// 关于 (D)ARE，S？来历？为什么和 Kalman 有关？
+// #image("/assets/image-8.png")
+// #image("/assets/image-9.png")
+// #image("/assets/image-10.png")
+
 == Derivation of Kalman Filter
 
 === Unbiased and Minimum Variance
@@ -315,3 +325,20 @@ $
 == Innovation Form Representation <sec:km_innovation_form>
 
 #Cre("TODO") 会在后面系统辨识的状态空间模型中被广泛采用。
+
+// 关于后面系统辨识用的模型，本质上？为什么用？和 kalman 这里 innovation form 的关系？还是为什么用？
+// #image("/assets/image-11.png")
+// #image("/assets/image-12.png")
+// #image("/assets/image-13.png")
+// 该模型将系统的可预测动态与不可预测创新项显式分离，使状态成为过去输入输出的最优线性表示。该形式与 Kalman 滤波的 innovation form 在结构上完全一致，避免了对过程噪声与测量噪声统计特性的显式建模，从而在系统辨识中具有良好的可操作性、统计一致性和可验证性。
+
+// 关于 K（描述不可预测部分如何最优地影响状态估计，即 “当前不可预测误差，应该在多大程度上被‘记入’系统内部状态，以改善未来预测。”）
+// e_k 是被定义的 ek​=yk​−E[yk​∣Fk−1​]
+// K 直觉上是什么？kalman 中 K 可以决定吗？逐步替代耦合？已经是一种体现，不是真实模型的绝对描述？
+// #image("/assets/image-14.png")
+// #image("/assets/image-15.png")
+// #image("/assets/image-17.png")
+// #image("/assets/image-18.png")
+
+// 关于 e_k，强制定义？
+// #image("/assets/image-16.png")

@@ -163,7 +163,7 @@ $ <equ:id_tfmodel_param_predictor>
 
 === State Space Model (Innovation form)
 
-#Cre("TODO 有件重要的事，就是说明这个状态空间模型为什么要写成这个形式，有什么好处（指状态里面用 K e_k 描述噪声，输出里用一个 e_k）")
+#Cre("TODO") 见前 innovation form。
 
 $
 x_(k+1) &= A x_k + B u_k + K e_k \

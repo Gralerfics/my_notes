@@ -3,9 +3,11 @@
 #import "@preview/cetz:0.4.2"
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-= Minimum Variance Unbiased Estimator (MVUE)
+= Estimation Theory
 
-== Philosophy
+== Minimum Variance Unbiased Estimator (MVUE)
+
+=== Philosophy
 
 // Supposing to fetch a set of *random samples* $X = {X_1, X_2, dots, X_N}, forall 1<=n<=N$ from the *probabiliy distribution* $p_(X_n) (x_n; theta)$.
 
@@ -33,7 +35,7 @@ $
 
 这分别是*解决问题*、*解决得如何*以及*还有没有可能解决得更好*三件事。
 
-== Estimates and Estimators
+=== Estimates and Estimators
 
 对估计问题的解答方式是设计一个估计量（estimator）。这是一种统计量，可以类比均值、方差等统计量；而估计值（estimate）是具体的值，例如对一系列具体的样本计算出的一个估计量的具体值。可以认为估计量是一个函数、一种方式，而估计值是该函数在具体情形下的值。
 
@@ -41,7 +43,7 @@ $
 
 // 具体点说，对于一组给定的、具体的观测数据，它可能来自对观测模型的采样，但是在观测的瞬间就已经是确定的数值。于是用这组观测数据配合选取的估计量，计算得到的估计值也将是一个确定的数值。前面所说的 “准不准” 和 “稳定不稳定” 是无法在这样的一次估计中体现的，而是对多次估计结果统计特性的总结。无偏性保证多次观测平均结果逼近真值，而小方差则确保单次估计都更接近真值——形象一些就是那个经典的打靶例子。
 
-== Unbiasedness <sec:mvue_unbiasedness>
+=== Unbiasedness <sec:mvue_unbiasedness>
 
 无偏就是估计量的期望和真值一致，该性质确保了在样本量足够大时估计值是准确的：
 
@@ -49,13 +51,13 @@ $
 EE(hat(theta)) = theta quad "or" quad "bias"(hat(theta), theta) = EE(hat(theta)) - theta = 0
 $
 
-== Minimum Variance <sec:mvue_mini_var>
+=== Minimum Variance <sec:mvue_mini_var>
 
 估计量的方差可以看作在不同样本组合下计算出的估计值的方差，该方差越小估计量越可靠。具体地，同样样本量下，两个无偏估计量，方差小的那个计算出的估计值靠近真值的概率更大。
 
 这也可以看作是收敛速度的一种体现，可以说方差小的统计量更高效（efficient）。
 
-== Cost Functions and Optimality Criterion
+=== Cost Functions and Optimality Criterion
 
 #Cre("TODO") Cost functions
 
@@ -103,7 +105,7 @@ $
 
 该结果包含待估计参数的真值 $theta$，故实际情况下无法实现。
 
-== Minimum Variance Unbiased Estimator (MVUE)
+=== Minimum Variance Unbiased Estimator (MVUE)
 
 由前，我们有时无法稳定地通过最小化 MSE 的方法获得一个好的估计量，但我们总得规定一个 “最优”。大部分情况下，我们会考虑使用*最小方差无偏*（minimum variance unbiased，MVU）性质作为最优估计量的标准。具体地，我们通常首先希望保证估计是无偏的，从而确保准确性，然后再追求估计的稳定性，即小方差。
 
