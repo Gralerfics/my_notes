@@ -219,7 +219,7 @@ $
 或者写成概率密度函数为：
 
 $
-p(bold(x)) = 1/((2 pi)^(N/2) det(C_w)^(1/2)) exp[-1/2 (bold(x) - bold(h)(theta))^T C_w^(-1) (bold(x) - bold(h)(theta))]
+p(bold(x); theta) = 1/((2 pi)^(N/2) det(C_w)^(1/2)) exp[-1/2 (bold(x) - bold(h)(theta))^T C_w^(-1) (bold(x) - bold(h)(theta))]
 $
 
 有了分布函数，取对数并对参数求导得到得分函数：

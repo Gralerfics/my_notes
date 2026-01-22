@@ -129,6 +129,6 @@ $
 
 // Prewhitening transformation。正定矩阵分解的方法？
 
-=== Summary
+// === Summary
 
-#Cre("TODO") P43 起，后面有总 summary 这里还要吗。
+// #Cre("TODO") P43 起，后面有总 summary 这里还要吗。
