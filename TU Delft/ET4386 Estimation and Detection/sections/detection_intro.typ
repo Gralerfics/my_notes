@@ -371,7 +371,7 @@ $
 令 $C_(i j)$ 为将 $cal(H)_j$ 的情况判成 $cal(H)_j$ 的成本，然后最小化贝叶斯风险（Bayes risk）：
 
 $
-R = EE[C] = sum_(i=0)^i sum_(j=0)^1 C_(i j)"Pr"(cal(H)_i; cal(H)_j) Pr(cal(H)_j)
+R = EE[C] = sum_(i=0)^1 sum_(j=0)^1 C_(i j)"Pr"(cal(H)_i; cal(H)_j) Pr(cal(H)_j)
 $
 
 如果 $C_10 > C_00$ 且 $C_01 > C_11$（这两个条件可以理解为错误的成本应当比正确的要高），则该条件下最优检测器的判决条件为：
@@ -379,8 +379,6 @@ $
 $
 p(bold(x); cal(H)_1)/p(bold(x); cal(H)_0) > (C_10 - C_00)/(C_01 - C_11) Pr(cal(H)_0)/Pr(cal(H)_1) = lambda
 $ <eq:d_intro_br_detector>
-
-可以观察到，它相较上节的最小错误率检测器只是多了一项关于系数的校正。
 
 ==== Summary
 

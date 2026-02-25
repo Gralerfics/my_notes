@@ -158,7 +158,7 @@ $
 方法自然就是在 $hat(theta)$ 处将 $f(theta)$ 线性化。由泰勒展开，在 $theta = hat(theta)$ 附近，$f(theta)$ 可一阶近似为：
 
 $
-f(theta) approx f(hat(theta)) + lr((dif f(theta))/(dif theta)|)_(theta = hat(theta)) + dots
+f(theta) approx f(hat(theta)) + lr((dif f(theta))/(dif theta)|)_(theta = hat(theta)) (theta - hat(theta)) + dots
 $
 
 代入 $y = f(theta) + L epsilon$ 即有：

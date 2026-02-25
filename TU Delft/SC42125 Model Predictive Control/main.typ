@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [TODO],
+    title: [Notes of Model Predictive Control (TODO)],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
@@ -32,21 +32,4 @@
     // listing-index: (enabled: true),
 )
 
-= 一些在不同地方出现的玩意
-
-== Kalman Filtering
-
-+ 贝叶斯滤波的一种实现（相较粒子滤波）
-+ 从观测器角度
-+ SDSP 中的推导
-+ F&I 中的推导（最小二乘角度、……）
-+ ……
-
-== RLS
-
-+ SDSP 中的推导
-+ F&I 中的推导
-
-= 一些在不同地方出现的概念
-
-== 最小方差无偏估计 (MVUE)
+#include "sections/todo.typ"

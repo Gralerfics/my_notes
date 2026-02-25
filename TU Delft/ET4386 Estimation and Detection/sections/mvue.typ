@@ -68,7 +68,7 @@ $
 &= EE{[(hat(theta) - EE(hat(theta))) + (EE(hat(theta)) - theta)]^2} \
 // &= EE[(hat(theta) - EE(hat(theta)))^2] + (EE(hat(theta)) - theta)^2 \
 // &= "var"(hat(theta)) + "bias"(hat(theta))^2 \
-&= underbrace(EE[(hat(theta) - EE(hat(theta)))^2], "var"(hat(theta))) + underbrace((EE(hat(theta)) - theta), "bias"(hat(theta)))^2
+&= underbrace(EE[(hat(theta) - EE(hat(theta)))^2], "var"(hat(theta))) + underbrace((EE(hat(theta)) - theta), "bias"(hat(theta))^2)^2
 $
 
 以上拆分表明 MSE 可以视作对偏差和方差的综合评估指标。顺便，*无偏估计量的偏差为零，故其 MSE 就等于其方差*。

@@ -163,7 +163,15 @@ $
 
 对于一些 $g$ 和 $I$，$hat(theta) = g(bold(x))$ 就是满足 $EE(hat(theta)) = theta$ 和 $"var"(hat(theta)) = 1/I(theta)$ 的估计量，即 MVUE，这就是 CRLB 定理的取等条件。
 
-自洽性可以通过求一下 $g(bold(x))$ 的方差验证，具体地：
+#Cre("TODO")
+
+// 首先根据 Fisher 信息的定义（分布的二阶导的相反数，即得分函数一阶导的相反数）可以验证该形式的得分函数其对应的 Fisher 信息就是 $I(theta)$：TODOOOOOOOOOOOOOOO
+
+// $
+// -EE[(partial^2 ln p(bold(x); theta))/(partial theta^2)] = -EE[(partial s(bold(x); theta))/(partial theta)] = -EE[(partial (I(theta) (g(bold(x)) - theta)))/(partial theta)] ???? 错了，还有 I(theta) 对 theta 求导呢
+// $
+
+其自洽性通过求一下 $g(bold(x))$ 的方差验证，具体地：
 
 $
 s(bold(x); theta) &= I(theta) (g(bold(x)) - theta) \

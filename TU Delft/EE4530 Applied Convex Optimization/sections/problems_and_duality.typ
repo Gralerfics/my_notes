@@ -192,12 +192,25 @@ $
 
 = Duality
 
-== Lagrange Dual Problem
+== Lagrangian
 
-#underline[Lagrangian]：#Cre("TODO")
+对于标准优化问题：
+
+$
+&"minimize"& quad &f_0 (x) \
+&"subject to"& &f_i (x) <= 0, &quad &i = 1, dots, m \
+&& &h_i (x) = 0, &&i = 1, dots, p
+$
+
+#Cre("TODO") 其拉格朗日函数（Lagrangian）$L:RR^n times RR^m times RR^p -> RR$ 为：
 
 $
 L(x, lambda, nu) = f_0 (x) + sum_(i=1)^m lambda_i f_i (x) + sum_(i=0)^p nu_i h_i (x)
 $
 
-// lambda_i 对应的是 f_i (x) <= 0，注意方向符号
+#Cre("TODO") 注意：
++ $lambda_i$ 对应的是 $f_i (x) <= 0$，注意符号（）；
+
+== Lagrange Dual Function
+
+
