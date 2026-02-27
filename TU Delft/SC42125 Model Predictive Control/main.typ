@@ -32,4 +32,5 @@
     // listing-index: (enabled: true),
 )
 
-#include "sections/todo.typ"
+#include "sections/intro_bkg.typ"
+#include "sections/stability.typ"
