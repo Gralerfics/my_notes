@@ -3,5 +3,5 @@
 
 // #include "sections/intro.typ"
 #include "sections/fundamentals.typ"
-#include "sections/iteration_and_learning.typ"
-#include "sections/policy_gradient.typ"
+#include "sections/learning_func.typ"
+#include "sections/policy_optimization.typ"

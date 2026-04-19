@@ -4,17 +4,21 @@
 #import "@preview/cetz-plot:0.1.3"
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
-= Learning a Policy
+= On-Policy Optimization
 
-== Policy Gradient
+TODO.
 
-=== REINFORCE
+== REINFORCE
 
-=== Baseline
+== Baseline and Actor-Critic
 
-== Actor-Critic
+== Natural Policy Gradient (NPG)
+
+== Trust Region Policy Optimization (TRPO)
 
 == Proximal Policy Optimization (PPO)
+
+= Off-Policy Optimization
 
 == Deep Deterministic Policy Gradient (DDPG)
 

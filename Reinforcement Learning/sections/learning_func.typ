@@ -14,10 +14,10 @@
 
 == Value Iteration
 
-// == Monte Carlo and Temporal Difference
+== Monte Carlo and Temporal Difference
 
-// == Q-Learning
+== Q-Learning
 
-// == SARSA
+== SARSA
 
 == Deep Q-Network (DQN)
