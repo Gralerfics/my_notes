@@ -331,4 +331,117 @@ $ <equ:q_bellman_expectation>
 
 == Optimal Bellman Equations
 
+到现在为止，我们定义的值函数和动作值函数都是基于策略 $pi$ 的，通过调整策略可以得到不同的值函数集合。
 
+我们定义*最优值函数*（optimal value function）和*最优动作值函数*（optimal action-value function）：
+
+$
+V^* (s) := max_pi V^pi (s)
+$
+
+$
+Q^* (s, a) := max_pi Q^pi (s, a)
+$
+
+注意#underline[该定义并不能保证存在一种最优策略]使得每个状态 $s$ 或状态动作对 $(s, a)$ 都能取到这个最优值。不过我们就#underline[假设存在最优策略] $pi^*$：
+
+$
+exists pi^*, quad V^(pi^*) (s) equiv V^* (s) >= V^pi (s), quad forall pi, forall s in cal(S)
+$ <equ:optimal_policy_exists_assumption>
+
+动作值函数同理。实际上这个假设对大部分情况都成立，因为我们用 $pi (a mid(|) s)$ 对策略建模，本身就可以针对每个 $s$ 设计策略，而将所有状态下的最优子策略拼在一起即可得到最优策略。
+
+之前推导了值函数和动作值函数的关系，这里也有#underline[最优值函数和最优动作值函数的关系]：
+
+$
+V^* (s) &= max_a Q^* (s, a)
+$ <equ:vq_opt_relation>
+
+#blockquote([
+  *关于最优值函数和最优动作值函数关系的证明*：
+
+  首先由定义和 @equ:vq_relation 有：
+
+  $
+  V^* (s) = max_pi V^pi (s) = max_pi sum_a pi(a mid(|) s) Q^pi (s, a)
+  $
+
+  接下来我们先证明其 $<= max_a Q^* (s, a)$。由定义，对任意 $pi$ 有：
+
+  $
+  sum_a pi(a mid(|) s) Q^pi (s, a) <= sum_a pi(a mid(|) s) max_(a') Q^* (s, a') = max_a Q^* (s, a)
+  $
+
+  然后证明其 $>= max_a Q^* (s, a)$。构造一个策略 $tilde(pi)$ 如下：在状态 $s$ 采取动作 $tilde(a) = arg max_a Q^* (s, a)$，即有 $Q^* (s, tilde(a)) = max_a Q^* (s, a)$，之后按照最优策略执行。该策略在状态 $s$ 的期望回报为：
+
+  $
+  V^tilde(pi) (s) = sum_a tilde(pi) (a mid(|) s) Q^tilde(pi) (s, a) = Q^* (s, tilde(a)) = max_a Q^* (s, a)
+  $
+  
+  又由于 $V^* (s)$ 是所有策略中可以取到的最大期望回报，故有：
+
+  $
+  max_pi sum_a pi(a mid(|) s) Q^pi (s, a) = V^* (s) >= V^tilde(pi) (s) = max_a Q^* (s, a)
+  $
+
+  两个不等式联合得到 @equ:vq_opt_relation。
+])
+
+最优值函数和最优动作值函数也有迭代形式，即*最优贝尔曼方程*（optimal Bellman equations），证明见后：
+
+$
+V^* (s) &= max_a [r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [V^* (s')]] \
+&= max_a [r(s, a) + gamma sum_(s') P(s' mid(|) s, a) V^* (s')]
+$ <equ:v_bellman_optimal>
+
+$
+Q^* (s, a) &= r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [max_(a') Q^* (s', a')] \
+&= r(s, a) + gamma sum_(s') P(s' mid(|) s, a) max_(a') Q^* (s', a')
+$ <equ:q_bellman_optimal>
+
+课件中#underline[考虑状态可微的情况]，则有最优 Q 值（optimal Q-values）：
+
+$
+Q^* (s, a) = r(s, a) + gamma integral P(s' mid(|) s, a) max_(a') Q^* (s', a') dif s'
+$
+
+对应的最优策略为在任意状态下都选取令最有动作值函数最大的动作，即：
+
+$
+pi^* (a mid(|) s) = 1, quad "iff" a = arg max_(a') Q^* (s, a')
+$
+
+#blockquote([
+  *关于最优贝尔曼方程的证明*：
+  
+  从定义出发，利用前面证明的一些结论很容易得到最优动作值函数的版本：
+
+  $
+  Q^* (s, a) &= max_pi Q^pi (s, a) \
+  &= max_pi [r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [V^pi (s')]] \
+  &=^* r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [max_pi V^pi (s')] \
+  &= r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [V^* (s')] \
+  &= r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [max_(a') Q^* (s', a')]
+  $
+
+  其中需要注意的是 $*$ 式，这一步将 $max_pi$ 放进了期望中，不具备一般性，因为前者要求同一个策略在所有可能后续状态 $s'$ 上表现最佳，放进期望后则允许对每个状态 $s'$ 分别选取最佳策略。故#underline[欲使该步成立，需要满足前述最优策略存在的假设]，即 @equ:optimal_policy_exists_assumption。
+
+  接下来代入 @equ:vq_opt_relation 即可直接得到最优值函数的版本：
+
+  $
+  V^* (s) &= max_a Q^* (s, a) \
+  &= max_a [r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [V^* (s')]]
+  $
+])
+
+考虑最优策略价值函数 $J^* := max_pi J^pi$：
+
+$
+max_pi J^pi &= max_pi EE_rho [V^pi (s_0)] \
+&=^* EE_rho [max_pi V^pi (s_0)] = EE_rho [V^* (s_0)] \
+&= EE_rho [max_a Q^* (s_0, a)] \
+&=^* EE_(s_0~rho(dot)) [max_a (r(s_0, a) + gamma EE_(s'~P(dot mid(|) s_0, a)) [max_(a') Q^* (s', a')])] \
+&= EE_(s~rho(dot)) [max_a (r(s, a) + gamma EE_(s'~P(dot mid(|) s, a)) [max_(a') max_pi Q^pi (s', a')])]
+$
+
+其中两个 $*$ 式的含义仍表示需要 @equ:optimal_policy_exists_assumption 的最优策略存在；前者是为了将 $max_pi$ 放进期望中，后者是证明最优动作值函数贝尔曼方程时用到了该假设。最后一步进行了一些等效替换。
