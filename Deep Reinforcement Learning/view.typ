@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Reinforcement Learning],
+    title: [Notes of Deep Reinforcement Learning],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
