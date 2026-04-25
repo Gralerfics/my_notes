@@ -157,7 +157,7 @@ $
 
 但#underline[采用神经网络等模型参数化值函数时就很容易发散]，这是由于模型估计误差、自举性等因素复杂综合导致的。引入 $theta'$ 只能弱化耦合而无法消除，因为终究无法得到真实的 $Q^*$ 充当优化目标。
 
-考虑*神经拟合 Q 迭代*（neural-fitted Q-iteration，NFQ）算法，这是第一个成功的深度强化学习算法，就是迭代比较慢。相比普通的半梯度学习，它会在每次阶段性收敛后再将 $theta$ 同步到 $theta'$，一步一个脚印显著降低发散概率。
+若要进一步可以考虑*神经拟合 Q 迭代*（neural-fitted Q-iteration，NFQ）算法，这是第一个成功的深度强化学习算法，就是迭代比较慢。相比普通的半梯度学习，它会在每次阶段性收敛后再将 $theta$ 同步到 $theta'$，一步一个脚印显著降低发散概率。
 
 === Online Q-Learning
 
@@ -192,9 +192,45 @@ while True:
 
 其中，可以观察到半梯度法 `target.detach()` 的使用。此外，代码中的 `term` 指示是否是终止状态（terminal state），确保在终止状态不再加入未来的奖励。
 
-== Stabilization Techniques
+== Stabilization Issues and Techniques
+
+前文讨论过，朴素的半梯度在线 Q-Learning 很容易发散。从机器学习的角度来看，这种不稳定性源于其违背了一系列假设，例如：
++ 回归目标不平稳（non-stationary），即前述自举性的问题；
++ 贪婪策略改变了训练分布；
++ 网络会遗忘旧样本；
++ 状态转移不是独立同分布的；
 
 TODO
+
+=== On-policy and Off-policy Sampling
+
+在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。
+
+=== Experience Replay
+
+TODO
+
+如何利用 Q-Learning off-policy 的特性？
+
+*重放缓存*（experience replay buffer）：
+
+优先重放缓存（prioritized experience replay buffer）
+
+=== Exploration and Neural Networks
+
+TODO
+
+$epsilon.alt$-贪婪探索策略（$epsilon.alt$-greedy exploration policy）
+
+=== Target Networks
+
+TODO
+
+半梯度 Q-Learning
+
+硬目标更新
+
+软目标更新
 
 == Deep Q-Networks (DQN)
 
