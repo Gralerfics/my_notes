@@ -237,7 +237,7 @@ V^pi (s) &= EE_(a~pi (dot mid(|) s), s'~P(dot mid(|) s, a)) [r(s, a) + gamma V^p
 &= sum_(a) pi(a mid(|) s) sum_(s') P(s' mid(|) s, a) [r(s, a) + gamma V^pi (s')]
 $ <equ:v_bellman_expectation>
 
-类似性质在这里称为*自举*（bootstrapping），该递推式也被称为*贝尔曼期望公式*（Bellman expectation equation），证明见后。动作值函数的版本是：
+该递推式也被称为*贝尔曼期望公式*（Bellman expectation equation），证明见后。动作值函数的版本是：
 
 $
 Q^pi (s, a) &= r(s, a) + gamma EE_(s'~P(dot mid(|) s, a), a'~pi (dot mid(|) s')) [Q^pi (s', a')] \
@@ -445,3 +445,7 @@ max_pi J^pi &= max_pi EE_rho [V^pi (s_0)] \
 $
 
 其中两个 $*$ 式的含义仍表示需要 @equ:optimal_policy_exists_assumption 的最优策略存在；前者是为了将 $max_pi$ 放进期望中，后者是证明最优动作值函数贝尔曼方程时用到了该假设。最后一步进行了一些等效替换。
+
+// == End-to-end Learning
+
+// *端到端学习*（end-to-end learning）

@@ -32,4 +32,16 @@
     // listing-index: (enabled: true),
 )
 
+#show raw: set text(
+    font: "DejaVu Sans Mono",
+    size: 0.9em
+)
+
+#show raw: it => box(
+    fill: none,
+    inset: 1pt,
+    radius: 0pt,
+    it
+)
+
 #include "main.typ"
