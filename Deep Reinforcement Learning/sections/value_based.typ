@@ -195,18 +195,17 @@ while True:
 == Stabilization Issues and Techniques
 
 前文讨论过，朴素的半梯度在线 Q-Learning 很容易发散。从机器学习的角度来看，这种不稳定性源于其违背了一系列假设，例如：
-+ 回归目标不平稳（non-stationary），即前述自举性的问题；
-+ 贪婪策略改变了训练分布；
-+ 网络会遗忘旧样本；
-+ 状态转移不是独立同分布的；
++ 回归目标不平稳（non-stationary），即前述的自举性问题；
++ 探索策略会改变训练数据分布，采样数据也随之改变；
++ 网络随着训练会遗忘旧样本，即灾难性遗忘（catastrophic forgetting）；
++ 状态转移之间强相关，不满足*独立同分布*（independent and identically distributed，i.i.d）假设。
 
-TODO
-
-=== On-policy and Off-policy Sampling
-
-在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。
+接下来我们详细讨论其中较关键的一些问题和它们的解决方案。
 
 === Experience Replay
+
+// On-policy and Off-policy Sampling
+在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。
 
 TODO
 
@@ -216,7 +215,7 @@ TODO
 
 优先重放缓存（prioritized experience replay buffer）
 
-=== Exploration and Neural Networks
+=== Persistent Exploration
 
 TODO
 
