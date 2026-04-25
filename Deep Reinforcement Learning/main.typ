@@ -2,3 +2,4 @@
 #set math.equation(numbering: "(1)")
 
 #include "sections/fundamentals.typ"
+#include "sections/value_based.typ"
