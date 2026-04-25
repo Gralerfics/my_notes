@@ -16,7 +16,7 @@
 
 // 课程跳过这个，毕竟不 deep。如果要写可写到 value iteration 收敛性的证明，涉及 Bellman 算子压缩映射和不动点。
 
-== Tabular Q-Learning and SARSA
+== Tabular Q-Learning and SARSA <sec:tab_ql_and_sarsa>
 
 既然可以迭代求解 $V^* (s)$，索性直接求 $Q^* (s, a)$，更方便求解策略 $a^* = arg max_a Q^* (s, a)$。考虑状态和动作空间离散的情况，$Q (s, a)$ 实际上是表格式的（tabular），包含共 $abs(cal(S)) times abs(cal(A))$ 个元素。
 
@@ -57,6 +57,21 @@ $
 该目标直接计算自实际样本，行为策略和目标策略一致，是 on-policy 的。
 
 表格式 Q-Learning 最大的问题在于*维度诅咒*（curse of dimensionality），状态和动作空间较大时 $Q$ 的元素数量指数级上升，让学习几乎成为不可能，也难以处理状态或动作连续的情况。
+
+#blockquote([
+  *关于一个有效目标的设计*：
+
+  我们需要澄清一个重要的原则，关于#underline[所谓的目标（target）应该怎样去选取]，以回答问题：为什么前面 SARSA、Q-Learning 等算法采用现在这样的目标？它们为什么有效？
+
+  #underline[一个重要的判断是]：一个合法的、可用于优化的目标，其在当前条件下的条件期望必须等同于我们要学习的对象。
+
+  我们得举点例子说明，在 Q-Learning 中我们希望学习的是
+  
+  的 $r_t + gamma max_a Q (s_(t+1), a)$，
+  
+  
+  考虑 SARSA 的 $r_t + gamma Q (s_(t+1), a_(t+1))$，
+])
 
 == Value Approximation
 
@@ -198,22 +213,31 @@ while True:
 + 回归目标不平稳（non-stationary），即前述的自举性问题；
 + 探索策略会改变训练数据分布，采样数据也随之改变；
 + 网络随着训练会遗忘旧样本，即灾难性遗忘（catastrophic forgetting）；
-+ 状态转移之间强相关，不满足*独立同分布*（independent and identically distributed，i.i.d）假设。
++ 状态转移之间强相关，不满足*独立同分布*（independent and identically distributed，i.i.d.）假设。
 
 接下来我们详细讨论其中较关键的一些问题和它们的解决方案。
 
 === Experience Replay
 
-// On-policy and Off-policy Sampling
-在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。
+在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。采样和更新采用的策略可能一致可能不一致，即前文讨论过的 on-policy 和 off-policy 采样。
 
-TODO
+#blockquote([
+  *$V$/$Q$ 的选择与 on-/off-policy 的关系*：
+  
+  学习 $V$ 还是 $Q$ 这件事和 on-/off-policy 本没有直接的联系，但 on-policy 学 $V$ 和 off-policy 学 $Q$ 是比较自然和直接的。
 
-如何利用 Q-Learning off-policy 的特性？
+  首先回顾 @sec:tab_ql_and_sarsa 末注释中关于合理目标设计的讨论。判断采样是 on-/off-policy 与否主要就看目标 $y_t$ 中体现的目标策略。
 
-*重放缓存*（experience replay buffer）：
+  对于 $V^pi (s)$ 来说，它平均掉了动作这一维度，TODO
 
-优先重放缓存（prioritized experience replay buffer）
+  所以课件中总结称 “Values can only be estimated on-policy, Q-values off-policy”，不普遍成立，但可以说 $V$ 的直接 TD 估计通常是 on-policy 的，而 $Q$ 也更容易用于 off-policy 算法。
+])
+
+我们优化目标策略 $pi$ 时，若更新所用的样本也是策略 $pi$ 采集的，那么就是 on-policy 的，它#underline[相对稳定且若学习 $V$ 只需要考虑状态输入，维度较低]，但若#underline[策略变化就需要重新采样数据]；若所用的样本是某个其他的行为策略 $mu$ 采集的，那么就是 off-policy 的，若学习 $Q$ 它#underline[需要更大的输入空间（状态和动作）]，但#underline[可以复用旧的或者其他智能体的经验]。
+
+使用最优策略更新的 Q-Learning 是 off-policy 的，我们可以利用这一特性，为其添加一个*经验重放缓存*（experience replay buffer）。它#underline[存储最近 $n$ 次状态转移中得到的数据样本]，每次训练时会#underline[随机从中采集一个小批次]（mini-batch）的数据，并且#underline[始终包括最近采集的样本]。这样做让部分旧样本仍参与学习，#underline[减轻遗忘的问题]，随机 mini-batches 也让数据分布#underline[更均匀、更接近 i.i.d.]。
+
+重放缓存的一个变体是*优先经验重放缓存*（prioritized experience replay buffer），它会优先存储误差较大的样本。直觉上，这是为了#underline[针对性反复学习之前发现没学好的样本]，但同时这也有可能打乱训练数据分布（误差较大的样本可能在新旧、类型上分布不均），#underline[降低其对灾难性遗忘问题的抵抗力]。
 
 === Persistent Exploration
 
