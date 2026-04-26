@@ -91,7 +91,7 @@ $
 (s_t, a_t, r_t, s_(t+1), a_(t+1))
 $
 
-采用策略 $pi$ 采样得到的一条或多条轨迹中收集到的 $n$ 条 TD 样本构成数据集，记为：
+采样得到的一条或多条轨迹中收集到的 $n$ 条 TD 样本构成数据集，记为：
 
 $
 cal(D) = {(s_t, a_t, r_t, s_(t+1), a_(t+1))}_(t=1)^n
@@ -105,7 +105,13 @@ $
 cal(L)[theta] := EE_cal(D) [(overbrace(underbrace(r_t + gamma v_theta (s_(t+1)), "target" y_t) - v_theta (s_t), "TD-error"))^2]
 $ <equ:loss_vfunc_rvg>
 
-如果用动作值函数则为：
+这里使用 $EE_cal(D)$ 的#underline[表述也不严谨]，毕竟我们是把 $cal(D)$ 写成了样本集合的形式而非随机分布，表示平均值这里最好是直接用 $"mean"[dot]$。严格一点我们写成：
+
+$
+D = (S_t, A_t, R_t, S_(t+1), A_(t+1)) ~ P_cal(D) (dot)
+$
+
+也并非不可，不过全小写在之后好看一点，也更像采样采来的，就这样保留原记号了。如果用动作值函数：
 
 $
 cal(L)[theta] := EE_cal(D) [(overbrace(underbrace(r_t + gamma q_theta (s_(t+1), a_(t+1)), "target" y_t) - q_theta (s_t, a_t), "TD-error"))^2]
@@ -183,7 +189,7 @@ $
 引入半梯度法后，模型可以表达为：
 
 $
-underbrace(q_theta (s_t, a_t), "value") =^! max_pi EE_pi [sum_(k=0)^infinity gamma^k r_(t+k) mid(|) s_t, a_t] approx underbrace(r(s_t, a_t) + gamma EE[max_(a') q_(theta') (s_(t+1), a')], "target")
+underbrace(q_theta (s_t, a_t), "value") =^! max_pi EE_pi [sum_(k=0)^infinity gamma^k R_(t+k) mid(|) s_t, a_t] approx underbrace(r(s_t, a_t) + gamma EE [max_(a') q_(theta') (S_(t+1), a')], "target")
 $
 
 等号上的叹号表达我们希望二者相等，即希望 $q_theta$ 是 $Q^*$ 的良好估计。用 PyTorch 实现节选如下：
