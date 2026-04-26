@@ -317,4 +317,46 @@ $
 
 == Deep Q-Networks (DQN)
 
-TODO
+*深度 Q 网络*（DQN）包含一系列在线深度 Q-Learning 算法，总之就是用神经网络作为参数化模型，并且#underline[把上节的重放缓存和目标网络等手段都用上以增强稳定性]的 Q-Learning。一轮（episode）更新的 PyTorch 实现框架如下：
+
+#codly()
+```python
+# Using mini-batch of transitions from replay buffer
+batch = self.replay_buffer.sample()
+targets = batch['rewards'] + self.gamma * (~batch['terminals'] \
+        * self.target_q(batch['next_states']).max(dim = -1)[0])
+values = self.q(batch['states']).gather(dim = -1, index = batch['actions'])
+# Backpropagate loss
+self.optimizer.zero_grad()
+mse_loss(values, targets.detach()).backward()
+self.optimizer.step()
+# Update target network (hard or soft)
+self.target_model_update()
+```
+
+接下来就举例说明关于 DQN 的一些性质。
+
+首先是#underline[采样和更新频率对 DQN 表现的影响]。我们不必要像前面讲的基础 Q-Learning 一样每采一个样本就更新一次梯度，而是可以一采就采一轮（包含多步）的数据，然后每轮更新 $n$ 次梯度（$n$ updates/episode）；或者一步一步采样，每 $n$ 步采样更新一次梯度（sampling $n$ steps/update）。这两种 $n$ 放到同一个度量下大致就是反比的关系。
+
+对于前者，$n$ 越大训练越不稳定，即训练曲线的方差看起来越大，同时训练更快，但毕竟容易不稳定所以有限度。对于后者自然是相反，$n$ 越大每次一起更新的样本越多，故训练越稳定，但相应学习速度变慢。
+
+然后是#underline[关于学习阶段]（phase），在线训练过程中样本来自智能体的探索，故训练数据的分布不是固定的，智能体能访问到的状态会随着策略变化而改变，这在许多任务中会#underline[使学习过程自发地划分成多个阶段]。如 Lunar Lander 模拟学习探测器降落的例子中，最初几乎是在随机、混乱地操作，直到某时刻学会了悬停才能稳定进入降落行为所在的状态空间区域。而#underline[进入新阶段的标志通常是损失函数不降反增]，因为智能体在新的状态空间区域将学习到新的行为，此即课件总结的 “learning happens in phases, indicated by increasing losses”。
+
+实践中 DQN 的调优需要经验和技巧。当出现失败（failure）情况，即策略无法生效时，通常可以考虑：
++ 提高梯度更新的学习率 $alpha$；
++ 提高 $gamma$ 以提升未来奖励的贡献；
++ 将网络输入归一化（零均值单位方差）；
++ 将奖励归一化到 $[-1, 1] subset RR$（要谨慎）；
++ 提高探索时长；
++ 增加轮次大小；
++ 修改网络结构等。
+
+当出现不稳定（instability）情况，即一段时间后策略不再进行有效的学习或提升时，可以考虑：
++ 降低学习率 $alpha$；
++ 降低 $gamma$ 减少错误的传播；
++ 减缓目标网络的更新；
++ 增加采样批次（mini-batch）大小；
++ 增加重放缓存大小；
++ 提高随机探索概率 $epsilon.alt$ 的最终下限等。
+
+=== TODO
