@@ -10,7 +10,7 @@
 
 = Value-Based Learning
 
-== Policy Iteration and Value Iteration
+== Policy Iteration and Value Iteration <sec:policy_iter_value_iter>
 
 （略）以迭代的方式求解最优 $V^* (s)$，在其基础上贪心制定最优策略。
 
@@ -30,9 +30,9 @@ $
 
 $
 y_t := r_t + gamma max_a Q (s_(t+1), a)
-$
+$ <equ:tab_ql_target>
 
-此处#underline[*目标*（target）表示对真实最优动作值函数 $Q^* (s_t, a_t)$ 的估计]，用它搭配一个学习率 $alpha$ 对当前 $Q (s_t, a_t)$ 进行更新：
+此处的*目标*（target）可视作对真实最优动作值函数 $Q^* (s_t, a_t)$ 的估计（节末注释中会更详细地讨论），用它搭配一个学习率 $alpha$ 对当前 $Q (s_t, a_t)$ 进行更新：
 
 $
 Q (s_t, a_t) <- (1 - alpha) Q (s_t, a_t) + alpha y_t
@@ -44,33 +44,58 @@ $
 Q (s_t, a_t) <- Q (s_t, a_t) + alpha (y_t - Q (s_t, a_t))
 $ <equ:tab_ql_update_residue>
 
-其中 $y_t - Q (s_t, a_t)$ 被称为*有限差分误差*（TD error）。如此迭代，最终将会有 $Q (s, a) -> Q^* (s, a)$，证明暂略。
+其中 $y_t - Q (s_t, a_t)$ 被称为*有限差分误差*（TD error）。// 如此迭代，最终将会有 $Q (s, a) -> Q^* (s, a)$，证明暂略。
 
-值得注意的是，智能体探索时所实际执行的策略即*行为策略*（behavior policy）是基于 $Q$ 估计值计算的，而更新式中 $max_a Q (s_(t+1), a)$ 说明更新时所用的策略即*目标策略*（target policy）是取当前估计下的最优策略。故在 Q-Learning 中，行为策略和目标策略不一致，这种类型的算法称为 off-policy 算法。
+值得注意的是，智能体探索时所实际执行的策略即*行为策略*（behavior policy）是基于 $Q$ 估计值计算的，而更新式中 $max_a Q (s_(t+1), a)$ 说明更新时所用的策略即*目标策略*（target policy）是取当前估计下的最优策略。故在 Q-Learning 中，行为策略和目标策略不一致，这种类型的算法称为 off-policy 算法。关于 on-/off-policy 会在后文 @sec:experience_replay 中更详细地讨论。
 
 与 Q-Learning 相对应，自然也有 on-policy 的 SARSA 算法，其每次状态转移采样得到 $(s_t, a_t, r_t, s_(t+1), a_(t+1))$（这五项的首字母也是算法得名原因），选取的目标为：
 
 $
 y_t^"SARSA" := r_t + gamma Q (s_(t+1), a_(t+1))
-$
+$ <equ:sarsa_target>
 
-该目标直接计算自实际样本，行为策略和目标策略一致，是 on-policy 的。
+该目标直接计算自行为策略采样的样本，用于目标策略的更新，二者一致，故为 on-policy 的。
 
 表格式 Q-Learning 最大的问题在于*维度诅咒*（curse of dimensionality），状态和动作空间较大时 $Q$ 的元素数量指数级上升，让学习几乎成为不可能，也难以处理状态或动作连续的情况。
 
 #blockquote([
-  *关于一个有效目标的设计*：
+  *关于一个有效目标的设计及 Q-Learning 和 SARSA 的收敛性*：
 
   我们需要澄清一个重要的原则，关于#underline[所谓的目标（target）应该怎样去选取]，以回答问题：为什么前面 SARSA、Q-Learning 等算法采用现在这样的目标？它们为什么有效？
 
-  #underline[一个重要的判断是]：一个合法的、可用于优化的目标，其在当前条件下的条件期望必须等同于我们要学习的对象。
+  #underline[一个重要的判断是]：一个合法的、可用于优化的目标，其条件期望必须等同于我们要学习的对象，这样我们才能通过更新让估计趋近这个目标。
 
-  我们得举点例子说明，在 Q-Learning 中我们希望学习的是
+  我们得举点例子说明。#underline[在 Q-Learning 中]我们希望学习的是最优动作值函数 $Q^* (s, a)$，定义随机变量 $Y_t^* := r(S_t, A_t) + gamma max_a Q^* (S_(t+1), a)$，由最优贝尔曼方程 @equ:q_bellman_optimal 可知其条件期望满足：
+
+  $
+  EE_pi [Y_t^* mid(|) S_t = s, A_t = a] = Q^* (s, a)
+  $
+
+  即我们要学习的目标。这里 $EE_pi$ 的 $pi$ 可以不写，因为 $(s, a)$ 已经给定，这个期望和策略无关，这里只是强调一下，如果是 $V$ 就无法省略了。于是由 $Y_t^*$ 我们可以设计目标为其样本：
   
-  的 $r_t + gamma max_a Q (s_(t+1), a)$，
+  $
+  y_t^* := r(s_t, a_t) + gamma max_a Q^* (s_(t+1), a)
+  $
   
+  然而，这个目标虽然有效，却无法实际应用，因为我们根本不知道 $Q^* (s_(t+1), a)$ 的真值，$Q^*$ 本来就是我们要求的东西。这实际上已经是另一个问题了，解决方法是用当前参数估计 $Q (s_(t+1), a)$ 来近似它，于是就得到了最终 @equ:tab_ql_target 中的 $y_t$。这么做的依据是通过最优贝尔曼算子可以证明 $Q$ 将随迭代收敛到不动点 $Q^*$，#underline[所以 Q-Learning 目标的合理性其实是通过两重依据来保障的]：
+
+  $
+  "objective" Q^* =^! EE ["target" Y_t^*] <- EE ["approximated target" Y_t]
+  $
+
+  这里等号上加叹号表示我们要求其成立。
   
-  考虑 SARSA 的 $r_t + gamma Q (s_(t+1), a_(t+1))$，
+  我们#underline[再看 SARSA 的例子]，定义 $Y_t^"SARSA" := r(S_t, A_t) + gamma Q^pi (S_(t+1), A_(t+1))$，由贝尔曼期望公式 @equ:q_bellman_expectation，其条件期望满足：
+
+  $
+  EE_pi [Y_t^"SARSA" mid(|) S_t = s, A_t = a] = Q^pi (s, a)
+  $
+
+  其目标样本即 @equ:sarsa_target 中的形式。但这样我们发现一个问题，SARSA 好像学习的是 $Q^pi$ 而非最优 $Q^*$，也就是说#underline[如果行为策略 $pi$ 是固定的，那么 SARSA 实际上做的就是策略评估（policy evaluation）的工作]。但是没关系，我们会采用例如 $epsilon.alt$-贪婪等探索策略，只要有概率以更贪心的策略去采样，就#underline[相当于是进行了策略优化（policy improvement）]，二者相结合就得到和 @sec:policy_iter_value_iter 中一样的 “策略评估 + 策略优化” 架构，最终将会收敛到最优策略 $pi^*$ 和 $Q^*$。所以 SARSA 的收敛性和最优性其实也是通过两重依据来保障的：
+
+  $
+  "optimal" Q^* <- "objective" Q^pi =^! EE ["target" Y_t^"SARSA"]
+  $
 ])
 
 == Value Approximation
@@ -97,7 +122,7 @@ $
 cal(D) = {(s_t, a_t, r_t, s_(t+1), a_(t+1))}_(t=1)^n
 $
 
-=== Residual Value Gradients
+=== Residual Value Gradients <sec:residual_gradients>
 
 最常用的损失函数仍然是*均方误差*（mean-squared error，MSE），考虑值函数估计 $v_theta (s)$ 和目标之间在整个数据集 $cal(D)$ 上的均方误差：
 
@@ -115,15 +140,17 @@ $
 
 $
 cal(L)[theta] := EE_cal(D) [(overbrace(underbrace(r_t + gamma q_theta (s_(t+1), a_(t+1)), "target" y_t) - q_theta (s_t, a_t), "TD-error"))^2]
-$
+$ <equ:loss_qfunc_rvg>
 
 以上都是 on-policy 的，而后者实际上就是 SARSA。这一套损失函数设计与梯度更新方式称为*残差梯度*（residual gradients）法，平方项内的部分称为*残差*（residues）。
 
-残差的形式和 @equ:tab_ql_update_residue 中 $y_t - Q(s_t, a_t)$ 也是一致的，就如前文所述，$y_t$ 是对最优动作值函数的近似估计，#underline[残差本质上就是在衡量当前估计的 $Q(s_t, a_t)$ 是否满足最优贝尔曼方程] @equ:q_bellman_optimal，优化该损失函数就是在尝试推动 $q_theta$ 收敛到 $Q^*$。
+残差 $y_t - q_theta (s_t, a_t)$ 的形式和 @equ:tab_ql_update_residue 中 $y_t - Q(s_t, a_t)$ 也是一致的，就如前文所述，$y_t$ 是条件期望等于欲学习对象的目标样本，而#underline[残差本质上就是在衡量当前估计与目标的距离]，优化该损失函数就是在尝试推动 $q_theta$ 收敛到欲学习的对象。
 
-但要注意，目标 $y_t$ 中用到了 $q_theta (s_(t+1), a_(t+1))$，它也是基于当前参数 $theta$ 的一个#underline[近似值而不是真实的] $Q^* (s_(t+1), a_(t+1))$，这导致它实际无法真的令 $q_theta$ 收敛到 $Q^*$。类似这种 “用估计的参数当目标去优化参数估计” 的行为我们称为*自举*（bootstrapping），也是引发问题的根源。细节上的不同使得这种自举迭代可能让结果收敛（例如值迭代和 Q-Learning），也可能导致发散或产生稳态误差。
+但要注意，目标 $y_t$ 中用到了 $q_theta (s_(t+1), a_(t+1))$，它也是基于当前参数 $theta$ 的一个#underline[近似值而不是真实的] $Q^* (s_(t+1), a_(t+1))$，这导致它实际无法真的令 $q_theta$ 收敛到 $Q^*$。类似这种 “用估计的参数当目标去优化参数估计” 的行为我们称为*自举*（bootstrapping），也是引发问题的根源。细节上的不同使得这种自举迭代可能让结果收敛（例如值迭代和表格式 Q-Learning），也可能导致发散或产生稳态误差。
 
-接下来具体讨论这个问题。为了更清晰地展示参数的变化，我们以残差梯度法更新表格式 Q-Learning 为例进行说明。它也可以视作一种参数化，只不过参数就是所有表格值 $theta := bold(Q) = {Q_(s,a)} in RR^(abs(cal(S)) times abs(cal(A)))$。写出 Q-Learning 观察到转移 $(s_t, a_t, r_t, s_(t+1))$ 后的一步损失：
+我们在#underline[前文 Q-Learning 的收敛性中讨论过这一问题，当时可以用最优贝尔曼算子证明其最终仍然收敛到最优值，但此处残差梯度法的更新略有不同]，接下来就具体讨论这个问题。
+
+为了更清晰地展示参数的变化，我们以残差梯度法更新表格式 Q-Learning 为例进行说明。它也可以视作一种参数化，只不过参数就是所有表格值 $theta := bold(Q) = {Q_(s,a)} in RR^(abs(cal(S)) times abs(cal(A)))$。写出 Q-Learning 观察到转移 $(s_t, a_t, r_t, s_(t+1))$ 后的一步损失：
 
 $
 cal(L)[bold(Q)] := (r_t + gamma Q_(s_(t+1), a^*) - Q_(s_t, a_t))^2, quad a^* := arg max_a Q_(s_(t+1), a)
@@ -154,13 +181,13 @@ Q_(s_t, a_t) &<- (1 - alpha) Q_(s_t, a_t) + alpha (r_t + gamma Q_(s_(t+1), a^*))
 Q_(s_(t+1), a^*) &<- (1 - alpha gamma^2) Q_(s_(t+1), a^*) - alpha gamma (r_t - Q_(s_t, a_t))
 $
 
-第一部分 $Q_(s_t, a_t)$ 的更新没有什么问题，$r_t + gamma Q_(s_(t+1), a^*)$ 就是 $y_t$，和之前 @equ:tab_ql_update_interp 中完全一致；但这里还多出了第二部分 $Q_(s_(t+1), a^*)$ 的更新，与前文标准的表格式 Q-Learning 不一致了。
+第一部分 $Q_(s_t, a_t)$ 的更新没有什么问题，$r_t + gamma Q_(s_(t+1), a^*)$ 就是 $y_t$，和之前 @equ:tab_ql_update_interp 中完全一致；但这里还多出了第二部分 $Q_(s_(t+1), a^*)$ 的更新，这就是与前文标准的表格式 Q-Learning 不一致的地方了。
 
-这会导致两个问题，#underline[首先最重要的是多了这一项的残差梯度是*有偏的*（biased），无法再令参数收敛到正确值]，印证之前的猜想。因为利用贝尔曼最优算子我们证明 $Q^*$ 是最优贝尔曼方程的唯一不动点解，且标准表格式 Q-Learning 会收敛到这个解，但现在残差梯度化简后与其存在偏差，自然收敛结果也有偏差。
+这会导致两个问题，#underline[首先最重要的是多了这一项的残差梯度是*有偏的*（biased），无法再令参数收敛到正确值]。因为利用贝尔曼最优算子我们证明 $Q^*$ 是最优贝尔曼方程的唯一不动点解，且标准表格式 Q-Learning 会收敛到这个解，但现在残差梯度化简后与其存在偏差，自然收敛结果也有偏差。
 
 第二是#underline[违背了*因果性*（causality）]。具体地，更新的本质是树立一个目标对当前参数 $Q_(s_t, a_t)$ 进行调整，但残差梯度同时还去更新了未来状态的参数 $Q_(s_(t+1), a^*)$。这种#underline[参数估计和目标同时在变]的情况自然会导致更新过程不稳定，参数信息传播和学习速度变慢。
 
-=== Value Semi-gradients
+=== Value Semi-gradients <sec:semi_gradients>
 
 为了解决前述问题，标准 Q-Learning 常采用的是*半梯度*（semi-gradients）更新的方式。比如上节例子中残差梯度法同时更新 $Q_(s_t, a_t)$ 和 $Q_(s_(t+1), a^*)$，半梯度法则只用 $Q_(s_t, a_t)$ 这一部分梯度更新，从而和表格式 Q-Learning 保持一致并得以套用其收敛性结论。
 
@@ -170,21 +197,19 @@ $
 cal(L)[theta] := EE_cal(D) [(underbrace(r_t + gamma v_(theta') (s_(t+1)), "bootstrapped target" y_t) - v_theta (s_t))^2]
 $
 
-这样在更新时就有 $nabla_theta v_(theta') (s_(t+1)) = 0$，对应舍去的那一部分梯度。
+这样在更新时就有 $nabla_theta v_(theta') (s_(t+1)) = 0$，对应舍去的那一部分梯度。实际更新时 $theta'$ 的数值是和 $theta$ 相等的（$theta' = theta$），所以说明白点就#underline[只是反向传播时切断了 $theta'$ 的这一部分梯度]，前向传播时照旧。
 
-实际更新时 $theta'$ 的数值是和 $theta$ 相等的（$theta' = theta$），所以说明白点就只是反向传播时切断了 $theta'$ 的这一部分梯度，前向传播时照旧。
-
-以上更新方式称为*半梯度有限差分学习*（semi-gradient TD-learning）。在 PyTorch 具体实现中，给相应项加上 `.detach()` 即可实现只截断某一部分反向传播的操作。该方案比残差梯度法更快且无偏，对#underline[线性模型可以证明收敛]，例如前文表格 Q-Learning 的例子。
+以上更新方式称为*半梯度有限差分学习*（semi-gradient TD-learning）。在 PyTorch 具体实现中，给相应项加上 `.detach()` 即可实现只截断某一部分反向传播的操作。该方案#underline[比残差梯度法更快且无偏]，对#underline[线性模型可以证明收敛]，例如前文表格 Q-Learning 的例子。
 
 但#underline[采用神经网络等模型参数化值函数时就很容易发散]，这是由于模型估计误差、自举性等因素复杂综合导致的。引入 $theta'$ 只能弱化耦合而无法消除，因为终究无法得到真实的 $Q^*$ 充当优化目标。
 
-若要进一步可以考虑*神经拟合 Q 迭代*（neural-fitted Q-iteration，NFQ）算法，这是第一个成功的深度强化学习算法，就是迭代比较慢。相比普通的半梯度学习，它会在每次阶段性收敛后再将 $theta$ 同步到 $theta'$，一步一个脚印显著降低发散概率。
+若要更进一步，可以考虑*神经拟合 Q 迭代*（neural-fitted Q-iteration，NFQ）算法，这是第一个成功的深度强化学习算法，就是迭代比较慢。相比普通的半梯度学习，它会在每次阶段性收敛后再将 $theta$ 同步到 $theta'$，一步一个脚印显著降低发散的概率。
 
-=== Online Q-Learning
+=== Online Q-Learning <sec:online_q_learning>
 
-接下来讨论一个实例的具体实现细节，考虑用半梯度 TD 学习实现 Q-Learning，神经网络作为参数化模型。这是最基础的深度 Q-Learning，为后文 DQN 做铺垫。
+接下来讨论一个实例的具体实现细节，考虑用半梯度 TD 学习实现在线 Q-Learning，神经网络作为参数化模型，“在线” 表示从实时探索中采样所得样本中学习。这是最基础的深度 Q-Learning，为后文 DQN 做铺垫。
 
-首先有关参数化模型 $q_theta (s, a)$，自然的设计是将 $s$ 和 $a$ 作为输入层，输出层输出 $Q$ 值。但对于离散动作 Q-Learning，更新时需要反复计算 $max_a q_theta (s_(t+1), a)$，如果能一次前向传播计算出所有动作 $a$ 对应的 $q_theta (s_(t+1), a)$ 值（输出一个向量）相比依次计算最后取最值自然是更高效的。所以我们将状态作为输入层，输出层则让每个动作对应一个输出（one output per action）。
+首先有关参数化模型 $q_theta (s, a)$，自然的设计是将 $s$ 和 $a$ 作为输入层，输出层输出 $Q$ 值。但对于离散动作 Q-Learning，更新时需要反复计算 $max_a q_theta (s_(t+1), a)$，如果能一次前向传播计算出所有动作 $a$ 对应的 $q_theta (s_(t+1), a)$ 值（输出一个向量）相比依次计算最后取最值自然是更高效的。所以我们#underline[将状态作为输入层，输出层则让每个动作对应一个输出（one output/head per action）]。
 
 引入半梯度法后，模型可以表达为：
 
@@ -192,7 +217,7 @@ $
 underbrace(q_theta (s_t, a_t), "value") =^! max_pi EE_pi [sum_(k=0)^infinity gamma^k R_(t+k) mid(|) s_t, a_t] approx underbrace(r(s_t, a_t) + gamma EE [max_(a') q_(theta') (S_(t+1), a')], "target")
 $
 
-等号上的叹号表达我们希望二者相等，即希望 $q_theta$ 是 $Q^*$ 的良好估计。用 PyTorch 实现节选如下：
+用 PyTorch 实现节选如下：
 
 #codly()
 ```python
@@ -211,55 +236,84 @@ while True:
     optimizer.step()
 ```
 
-其中，可以观察到半梯度法 `target.detach()` 的使用。此外，代码中的 `term` 指示是否是终止状态（terminal state），确保在终止状态不再加入未来的奖励。
+其中，可以观察到半梯度法中 `target.detach()` 的使用。此外，代码中的 `term` 指示是否是终止状态（terminal state），#underline[确保在终止状态不再考虑未来的奖励]。
 
 == Stabilization Issues and Techniques
 
 前文讨论过，朴素的半梯度在线 Q-Learning 很容易发散。从机器学习的角度来看，这种不稳定性源于其违背了一系列假设，例如：
-+ 回归目标不平稳（non-stationary），即前述的自举性问题；
++ 回归目标不平稳（non-stationary），即前述的自举问题；
 + 探索策略会改变训练数据分布，采样数据也随之改变；
 + 网络随着训练会遗忘旧样本，即灾难性遗忘（catastrophic forgetting）；
 + 状态转移之间强相关，不满足*独立同分布*（independent and identically distributed，i.i.d.）假设。
 
 接下来我们详细讨论其中较关键的一些问题和它们的解决方案。
 
-=== Experience Replay
+=== Experience Replay <sec:experience_replay>
 
-在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。采样和更新采用的策略可能一致可能不一致，即前文讨论过的 on-policy 和 off-policy 采样。
+在强化学习中没有传统监督学习的训练集和测试集划分环节，所有数据来自与环境交互的采样。采样和更新采用的策略可能一致可能不一致，即前文提过的 on-policy 和 off-policy 采样。
+
+一般我们将希望评估或者优化的策略记为目标策略 $pi$，将探索中实际采用产生样本的策略记为行为策略 $b$。在我们优化目标策略 $pi$ 时，若更新所用的样本也是策略 $b = pi$ 采集的，那么算法就是 on-policy 的，它#underline[相对稳定且若学习 $V$ 只需要考虑状态输入，维度较低]，但若#underline[策略变化就需要重新采样数据]；若所用的样本是某个其他的行为策略 $b != pi$ 采集的，那么算法就是 off-policy 的，#underline[若学习 $Q$ 它需要更大的输入空间（状态和动作）]，但#underline[可以复用旧的或者其他智能体的经验]。
 
 #blockquote([
   *$V$/$Q$ 的选择与 on-/off-policy 的关系*：
   
   学习 $V$ 还是 $Q$ 这件事和 on-/off-policy 本没有直接的联系，但 on-policy 学 $V$ 和 off-policy 学 $Q$ 是比较自然和直接的。
 
-  首先回顾 @sec:tab_ql_and_sarsa 末注释中关于合理目标设计的讨论。判断采样是 on-/off-policy 与否主要就看目标 $y_t$ 中体现的目标策略。
+  实际上，区分 on-/off-policy 的根本依据不是看行为策略和目标策略是否一致，#underline[因为理论上 off-policy 的算法都可以 “退化” 到 on-policy]，把实时数据当历史数据用就可以了；但 on-policy 通常不能当 off-policy 算法用，所以我们#underline[需要看的应该是一个算法是否有能力利用不同于目标策略的行为策略产生的样本来学习优化目标策略]。
 
-  对于 $V^pi (s)$ 来说，它平均掉了动作这一维度，TODO
+  而是否能利用其他策略提供的样本，主要就#underline[看代入这个样本之后目标 $y_t$ 是否还合法、有效]（关于合理的样本设计，回顾 @sec:tab_ql_and_sarsa 末注释中的讨论）。
+  
+  如果要学习 $V^pi (s)$，应设计如 @equ:loss_vfunc_rvg 中的目标 $y_t^pi := r_t + gamma v_theta (s_(t+1))$。由贝尔曼期望公式，对应的随机变量 $Y_t^pi := R_t + gamma v_theta (S_(t+1))$ 的条件期望满足：
 
-  所以课件中总结称 “Values can only be estimated on-policy, Q-values off-policy”，不普遍成立，但可以说 $V$ 的直接 TD 估计通常是 on-policy 的，而 $Q$ 也更容易用于 off-policy 算法。
+  $
+  EE_pi [Y_t^pi mid(|) S_t = s] &= EE_pi [R_t + gamma v_theta (S_(t+1)) mid(|) S_t = s] \
+  &= sum_a #Cbl($pi(a mid(|) s)$) sum_(s') P(s' mid(|) s, a) [r(s, a) + gamma V^pi (s')] \
+  &= V^pi (s)
+  $
+
+  其中，有 $A_t ~ pi(dot mid(|) S_t = s)$ 和 $S_(t+1) ~ P(dot mid(|) S_t = s, A_t)$。如果代入由某个行为策略 $b != pi$ 采集的样本，会导致得到的 $Y_t^b$ 的条件期望中 $A_t ~ b(dot mid(|) s)$，而：
+
+  $
+  EE_pi [Y_t^b mid(|) S_t = s] &= sum_a #Cbl($b(a mid(|) s)$) sum_(s') P(s' mid(|) s, a) [r(s, a) + gamma V^pi (s')] \
+  &!= V^pi (s)
+  $
+
+  故 $y_t^b$ 不再是一个能正确学习 $V^pi (s)$ 的目标，所以这种直接 TD 估计 $V^pi (s)$ 的更新式通常只能是 on-policy 的。
+
+  相同的思路下，如果要学习 $Q^pi (s, a)$，计算目标的条件期望时直接给定了条件 $S_t = s, A_t = a$，这使得 $A_t$ 和 $S_(t+1)$ 的#underline[分布与策略无关]：不管是 $pi$ 还是 $b$，所得条件期望都等于 $Q^pi (s, a)$，可以正确地学习到目标函数。理解一下，意思就是随便什么样本，只要确实在状态 $s$ 采取了动作 $a$ 就可以用于更新 $Q (s, a)$，无关是采集的策略是谁。所以 off-policy 的算法学习 $Q$ 更自然。
+
+  这就是为什么课件中总结称 “Values can only be estimated on-policy, Q-values off-policy”，#underline[严格来说这句话不普遍成立]，但确实可以说 $V$ 的直接 TD 估计通常是 on-policy 的，而 $Q$ 也更容易用于 off-policy 算法。
+
+  至于反例当然存在，例如如果我们还是想学习 $V^pi (s)$，但数据不是 $pi$ 而是 $b$ 采集的，那通过*重要性采样*（importance sampling）校正后就可以做 off-policy 了，此处暂不展开；反过来，前文提过 off-policy 的算法本来就可以退化为 on-policy，包括上述学习 $Q$ 的例子。
 ])
 
-我们优化目标策略 $pi$ 时，若更新所用的样本也是策略 $pi$ 采集的，那么就是 on-policy 的，它#underline[相对稳定且若学习 $V$ 只需要考虑状态输入，维度较低]，但若#underline[策略变化就需要重新采样数据]；若所用的样本是某个其他的行为策略 $mu$ 采集的，那么就是 off-policy 的，若学习 $Q$ 它#underline[需要更大的输入空间（状态和动作）]，但#underline[可以复用旧的或者其他智能体的经验]。
-
-使用最优策略更新的 Q-Learning 是 off-policy 的，我们可以利用这一特性，为其添加一个*经验重放缓存*（experience replay buffer）。它#underline[存储最近 $n$ 次状态转移中得到的数据样本]，每次训练时会#underline[随机从中采集一个小批次]（mini-batch）的数据，并且#underline[始终包括最近采集的样本]。这样做让部分旧样本仍参与学习，#underline[减轻遗忘的问题]，随机 mini-batches 也让数据分布#underline[更均匀、更接近 i.i.d.]。
+使用最优策略更新的 Q-Learning 是 off-policy 的，我们可以利用这一特性，为其添加一个*经验重放缓存*（experience replay buffer）。它#underline[存储最近 $n$ 次状态转移中得到的数据样本]，每次训练时会#underline[随机从中采集一个小批次]（mini-batch）的数据，并且#underline[始终包括最近采集的样本]。这样做让部分旧样本仍参与学习，#underline[可减轻遗忘的问题]，随机 mini-batches 也让数据分布#underline[更均匀、更接近 i.i.d.]。
 
 重放缓存的一个变体是*优先经验重放缓存*（prioritized experience replay buffer），它会优先存储误差较大的样本。直觉上，这是为了#underline[针对性反复学习之前发现没学好的样本]，但同时这也有可能打乱训练数据分布（误差较大的样本可能在新旧、类型上分布不均），#underline[降低其对灾难性遗忘问题的抵抗力]。
 
-=== Persistent Exploration
+=== Exploration
 
-TODO
+训练或者说数据采集阶段，让智能体在环境中探索的最朴素的行动策略是纯*贪婪策略*（greedy policy），例如 Q-Learning 中就是取当前状态 $Q$ 值较大的动作。这样做会产生一些问题，首先贪心策略时间一长就会反复走那几条高分路径，#underline[重放缓存中将被相似的样本塞满]；用这些匮乏的样本训练将会#underline[使涉及不到的那些状态-动作对的 $Q$ 值得不到可靠更新从而被 “遗忘”]，失去泛化能力；总是选取最值的贪婪策略还#underline[容易反复选取偶然产生的高分动作导致不断放大错误]。
 
-$epsilon.alt$-贪婪探索策略（$epsilon.alt$-greedy exploration policy）
+为缓解这些问题，引入*$epsilon.alt$-贪婪探索策略*（$epsilon.alt$-greedy exploration policy）：在探索时，以 $epsilon.alt$ 的概率进行随机游走，$1 - epsilon.alt$ 的概率采取贪婪策略。同时这个 $epsilon.alt$ 将#underline[随时间线性衰减]，直到 $n_epsilon.alt$ 步后或者低于某个阈值 $epsilon.alt$ 时停止，即前期较为随机、后期趋于贪心。
+
+相较纯贪婪策略，$epsilon.alt$-贪婪策略为探索引入了一定的随机性，令其#underline[一直保持探索的可能]。当然，这是训练过程中采用的策略，实际部署用于#underline[测试时自然还是采用纯贪婪策略，即执行所学的最优策略]。
 
 === Target Networks
 
-TODO
+本节还是关于 @sec:residual_gradients 和 @sec:semi_gradients 中老生常谈的参数估计自举问题。由前，半梯度法引入 $theta'$ 以防止目标被同时更新，这里给用这套迟滞参数的模型（网络）起个正式名字叫*目标网络*（target networks）。
 
-半梯度 Q-Learning
+目标网络具体如何缓解自举问题就不重复了，前面没有细讲的一个问题是 $theta'$ 和 $theta$ 同步时机的问题。最直截了当的就是 @sec:online_q_learning 中实例的做法，只是截断了目标网络这一项的反向传播，这意味着每次前向传播采用的 $theta$ 和 $theta'$ 都是同步的，这样做其实还是有 “目标和估计一起动” 的问题存在。
 
-硬目标更新
+要减轻该现象，最简单是可以让目标网络停住一阵子，给当前估计留一些追赶的时间。例如，每 $n = 10$ 步才更新一下 $theta' <- theta$，在此之前都用旧值计算目标，这称为*硬目标更新*（hard target update）。
 
-软目标更新
+软目标更新则是类似于套一个低通滤波器，用：
+
+$
+theta' <- (1 - eta) theta' + eta theta
+$
+
+更新目标网络参数，$eta$ 可以选比如 $0.1$ 之类，这被称为*软目标更新*（soft target update），总体来说效果更好一些。
 
 == Deep Q-Networks (DQN)
 
