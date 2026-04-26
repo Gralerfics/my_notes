@@ -138,6 +138,33 @@ comp_generic_fixup(cdc, action, "i2c", "CSC3556", "-%s:00-cs35l56-hda.%d", 2);
 
 这些是正常的派生文件，不是手写补丁。
 
+### PulseAudio 软件音量 sink
+
+CS35L56 功放绑定后，Ubuntu 22.04 的 PulseAudio/UCM 仍把右上角音量映射到 HDA `Master` 控件。这个控件不能有效控制新绑定的 CS35L56 功放路径，表现为 0 静音、非 0 接近满音量。
+
+为当前用户新增：
+
+```text
+/home/gralerfics/.config/pulse/default.pa
+```
+
+内容逻辑：
+
+- 包含系统默认 PulseAudio 配置：`.include /etc/pulse/default.pa`
+- 加载 `module-remap-sink`
+- 底层硬件 sink 固定为 100%
+- 默认输出切到 `thinkbook_speaker_soft`
+- 右上角音量控制 `thinkbook_speaker_soft` 的软件音量
+
+关键配置：
+
+```text
+load-module module-remap-sink sink_name=thinkbook_speaker_soft master=alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink channels=2 channel_map=front-left,front-right master_channel_map=front-left,front-right remix=no sink_properties=device.description=ThinkBook_Speaker_Software_Volume
+set-sink-volume alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink 100%
+set-default-sink thinkbook_speaker_soft
+set-sink-volume thinkbook_speaker_soft 40%
+```
+
 ## 回滚
 
 只回滚 Realtek 补丁模块：
@@ -166,6 +193,13 @@ sudo reboot
 ```
 
 不建议回滚 SOF 固件，除非明确要恢复到最初无声状态。
+
+回滚 PulseAudio 软件音量 sink：
+
+```bash
+rm -f ~/.config/pulse/default.pa
+pulseaudio -k
+```
 
 ## 2. 最简最佳复现流程
 
@@ -325,4 +359,35 @@ bound i2c-CSC3556:00-cs35l56-hda.1
 
 ```text
 /lib/modules/6.8.0-110-generic/updates/sound/pci/hda/snd-hda-codec-realtek.ko
+```
+
+### 6. 修复右上角音量滑条
+
+如果出现“音量为 0 静音，非 0 接近满音量”，为当前用户创建 PulseAudio remap sink：
+
+```bash
+cat > ~/.config/pulse/default.pa <<'EOF'
+.include /etc/pulse/default.pa
+
+load-module module-remap-sink sink_name=thinkbook_speaker_soft master=alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink channels=2 channel_map=front-left,front-right master_channel_map=front-left,front-right remix=no sink_properties=device.description=ThinkBook_Speaker_Software_Volume
+set-sink-volume alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink 100%
+set-default-sink thinkbook_speaker_soft
+set-sink-volume thinkbook_speaker_soft 40%
+EOF
+
+pulseaudio -k
+```
+
+验证：
+
+```bash
+pactl list sinks short
+pactl info | grep -E '默认音频入口|Default Sink'
+pactl get-sink-volume @DEFAULT_SINK@
+```
+
+默认输出应为：
+
+```text
+thinkbook_speaker_soft
 ```
