@@ -3,3 +3,4 @@
 
 #include "sections/fundamentals.typ"
 #include "sections/value_based.typ"
+#include "sections/policy_gradient.typ"
