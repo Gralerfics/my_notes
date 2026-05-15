@@ -132,7 +132,7 @@ $
 cal(D) = {(s_k, a_k, r_k, s_(k+1), "done"_k, log pi_"old" (a_k mid(|) s_k), V^"old" (s_k))}_(k=1)^n
 $
 
-而且毕竟是 on-policy 算法，也没什么写成集合 $cal(D)$ 的必要，按顺序 $s_(k+1)$ 一般就是下一条数据的 $s_k$，可以不存它。还有一些基于 Monte Carlo 的算法需要整条轨迹信息，需要保持采样轨迹的完整结构：
+而且毕竟是 on-policy 算法，也没什么写成集合 $cal(D)$ 的必要，按顺序 $s_(k+1)$ 一般就是下一条数据的 $s_k$，可以不存它。还有一些基于 Monte-Carlo 的算法需要整条轨迹信息，需要保持采样轨迹的完整结构：
 
 $
 cal(D) = {tau_k}_(k=1)^n, quad tau_k = (s_0, a_0, r_0, s_1, dots, r_(n_k-1), s_(n_k))
@@ -219,7 +219,7 @@ $
   接下来我们具体证明直接对 @equ:loss_vfunc_rvg 应用残差梯度更新所得结果是有偏的。我们不是去证明迭代结果偏离，而是证明损失函数有偏（源于目标中采用的是对值函数的估计而非真实值函数），从而说明优化结果有偏。
   
   $
-  "TODO Assignment A1.3"
+  #Cre("TODO") "Assignment A1.3"
   $
 
   动作值函数的目标道理也差不多，不再赘述。
@@ -399,11 +399,11 @@ self.target_model_update()
 
 === Reason For Using "Deep" Learning
 
-TODO.
+#Cre("TODO").
 
 === Q-Learning extensions
 
-TODO.
+#Cre("TODO").
 
 // RL software architecture
 // Double Q-learning (*)
@@ -414,7 +414,7 @@ TODO.
 
 === Partial Observability
 
-TODO.
+#Cre("TODO").
 
 // Deep Recurrent Q-Networks (DRQN)
 // Neural Architecture

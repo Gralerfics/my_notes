@@ -62,8 +62,8 @@ $
 ])
 
 #figure(
-  image("../figures/markov_chain_flow.png", width: 80%),
-  caption: [马尔可夫链示意图（来自课件）。]
+    image("../figures/markov_chain_flow.png", width: 80%),
+    caption: [马尔可夫链示意图（来自 TU Delft 课件）]
 ) <fig:markov_chain_flow>
 
 总而言之，MDP 加上策略 $pi$ 这#underline[两个要素]构成了马尔可夫链，如图 @fig:markov_chain_flow 所示。因此，随机轨迹序列 $Tau$ 的分布参数依赖 MDP 参数和 $pi$，可记为：
