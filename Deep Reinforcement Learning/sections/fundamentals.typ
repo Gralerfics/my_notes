@@ -96,7 +96,7 @@ $ <equ:ee_rho_def>
 
 $
 J (tau) = sum_(t=0)^infinity gamma^t r_t
-$
+$ <equ:discounted_return>
 
 折扣回报是基于轨迹的，而轨迹是随机的，为了衡量一个状态的价值，我们需要的是回报的期望：
 

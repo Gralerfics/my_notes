@@ -102,7 +102,7 @@ $ <equ:sarsa_target>
 
 == Value Approximation
 
-为了表格式算法 cannot scale 的问题，我们可以将 $V$ 或 $Q$ 函数参数化，用相对少的参数去表达函数值：
+为了解决表格式算法 cannot scale 的问题，我们可以将 $V$ 或 $Q$ 函数参数化，用相对少的参数去表达函数值：
 
 $
 v_theta (s) approx V^pi (s), quad q_theta (s, a) approx Q^pi (s, a)
@@ -397,4 +397,24 @@ self.target_model_update()
 + 增加重放缓存大小；
 + 提高随机探索概率 $epsilon.alt$ 的最终下限等。
 
-=== TODO
+=== Reason For Using "Deep" Learning
+
+TODO.
+
+=== Q-Learning extensions
+
+TODO.
+
+// RL software architecture
+// Double Q-learning (*)
+// Dueling network architectures
+// Trust-region online bootstrapping
+// Distributional Q-learning
+// Modern DQN versions
+
+=== Partial Observability
+
+TODO.
+
+// Deep Recurrent Q-Networks (DRQN)
+// Neural Architecture
