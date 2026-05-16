@@ -257,17 +257,21 @@ $
 
 用 PyTorch 实现节选如下：
 
-#codly()
+#codly(zebra-fill: none)
 ```python
 from torch.optim import RMSprop
 from torch.nn.functional import mse_loss
+
 optimizer = RMSprop(q.parameters())
+
 while True:
     # sample episode from environment
     state, action, reward, term, next_state = environment.sample(q)
+
     # compute left and right side of Bellman eq.
     value = q(state).gather(dim = -1, index = action)
     target = reward + gamma * (~term * q(next_state).max(dim = -1)[0])
+
     # gradient descent step on supervised regression loss
     optimizer.zero_grad()
     mse_loss(value, target.detach()).backward()
@@ -357,17 +361,19 @@ $
 
 *深度 Q 网络*（DQN）包含一系列在线深度 Q-Learning 算法，总之就是用神经网络作为参数化模型，并且#underline[把上节的重放缓存和目标网络等手段都用上以增强稳定性]的 Q-Learning。一轮（episode）更新的 PyTorch 实现框架如下：
 
-#codly()
+#codly(zebra-fill: none)
 ```python
 # Using mini-batch of transitions from replay buffer
 batch = self.replay_buffer.sample()
 targets = batch['rewards'] + self.gamma * (~batch['terminals'] \
         * self.target_q(batch['next_states']).max(dim = -1)[0])
 values = self.q(batch['states']).gather(dim = -1, index = batch['actions'])
+
 # Backpropagate loss
 self.optimizer.zero_grad()
 mse_loss(values, targets.detach()).backward()
 self.optimizer.step()
+
 # Update target network (hard or soft)
 self.target_model_update()
 ```
@@ -404,15 +410,14 @@ self.target_model_update()
 === Q-Learning extensions
 
 #Cre("TODO")
+RL software architecture,
+Double Q-learning (\*),
+Dueling network architectures,
+Trust-region online bootstrapping,
+Distributional Q-learning,
+Modern DQN versions.
 
-// RL software architecture
-// Double Q-learning (*)
-// Dueling network architectures
-// Trust-region online bootstrapping
-// Distributional Q-learning
-// Modern DQN versions
-
-=== Partial Observability
+=== Partial Observability and Deep Recurrent Q-Networks (DRQN)
 
 现实中经常会出现系统中状态 $s$ 不可观测的情况，考虑*部分可观马尔可夫决策过程*（partiall observable Markov decision process，POMDP），相比普通 MDP 加入了取决于状态的*观测*（observations）变量 $o_t ~ O(dot mid(|) s_t) in cal(O)$，轨迹变为：
 
@@ -429,12 +434,118 @@ $
 可以定义*信念分布*或称*状态认知分布*（belief distribution）：
 
 $
-b(s mid(|) tau_t) := PP(S_t = s mid(|) o_0, a_0, dots, o_t)
+b_t (s mid(|) tau_t) := PP(S_t = s mid(|) o_0, a_0, dots, o_t)
 $
 
-其中 $tau_t$ 是估计到 $o_t$ 为止的样本，同时依旧将条件中的随机变量等简写为样本。
+其中 $tau_t$ 是估计到 $o_t$ 为止的样本，同时依旧将条件中的随机变量等简写为样本。我们希望 $b$ 表达的是智能体对 $t$ 时刻隐含状态分布的一个估计。课件里是没有写 $b_t$ 的下标 $t$ 的，而这里我们将它作为参数显式标注出来了，不然定义里的 $t$ 就没有来源，只能从 $tau_t$ 的下标勉强看出；而且 $tau_t$ 的长度也随 $t$ 变化，$b_t$ 本身就是不同时刻各自的一系列分布而不是一个分布。
 
-#Cre("TODO")
+套用贝叶斯估计框架可以得到如下状态转移（和习惯不同，这里 $s'$ 是前一个状态）：
 
-// Deep Recurrent Q-Networks (DRQN)
-// Neural Architecture
+$
+b_(t+1) (s mid(|) tau_(t+1)) prop O(o_(t+1) mid(|) s) integral P(s mid(|) s', a_t) b_t (s' mid(|) tau_t) dif s'
+$ <equ:belief_distribution_transition>
+
+
+
+#blockquote([
+    *关于信念分布状态转移的贝叶斯推导*：
+
+    由贝叶斯定理以及前述定义有：
+
+    $
+    b_(t+1) (s_(t+1) mid(|) tau_(t+1))
+    &= PP(S_(t+1) = s_(t+1) mid(|) o_0, a_0, dots, o_(t+1)) \
+    &= PP(s_(t+1) mid(|) tau_t, a_t, o_(t+1)) \
+    &prop PP(o_(t+1) mid(|) s_(t+1), cancel(tau_t", "a_t)) PP(s_(t+1) mid(|) tau_t, a_t) \
+    &= PP(o_(t+1) mid(|) s_(t+1)) PP(s_(t+1) mid(|) tau_t, a_t) \
+    &= PP(o_(t+1) mid(|) s_(t+1)) integral PP(s_(t+1), s_t mid(|) tau_t, a_t) dif s_t \
+    &= PP(o_(t+1) mid(|) s_(t+1)) integral PP(s_(t+1) mid(|) s_t, cancel(tau_t), a_t) PP(s_t mid(|) tau_t, cancel(a_t)) dif s_t \
+    &= O(o_(t+1) mid(|) s_(t+1)) integral P(s_(t+1) mid(|) s_t, a_t) b_t (s_t mid(|) tau_t) dif s_t
+    $
+
+    把 $s_(t+1)$ 重命名成 $s$，$s_t$ 重命名成 $s'$ 就是 @equ:belief_distribution_transition 了。这个过程其实就是贝叶斯估计中标准的预测和更新框架。
+])
+
+有了对状态分布的估计，我们就可以将前述 POMDP 转化为一个等价的基于 belief 的 MDP。历史 $tau_t$ 可以直接#underline[作为这个 MDP 的状态]，因为它包含了所有历史信息，是对 POMDP 状态的充分统计量（sufficient statistic），即知道 $tau_t$ 就可以计算 belief $b_t$。
+
+#figure(
+    image("../figures/po_markov_chain_flow_rnn.png", width: 80%),
+    caption: [部分可观马尔可夫链及 RNN 历史编码示意图（来自 TU Delft 课件）]
+) <fig:po_markov_chain_flow_rnn>
+
+如 @fig:po_markov_chain_flow_rnn 所示，其中 $bold(h)_t$ 对应的就是历史 $tau_t$。参考图中结构很容易补全这个等价 MDP 的各要素，其奖励函数为：
+
+$
+r (tau_t, a) = integral r(s, a) b(s mid(|) tau_t) dif s
+$
+
+状态转移概率为：
+
+$
+P (tau_(t+1) mid(|) tau_t, a_t) = integral.double O(o_(t+1) mid(|) s') P(s' mid(|) s, a_t) b_t (s mid(|) tau_t) dif s dif s'
+$
+
+还可以写出最优动作值函数为：
+
+$
+Q^* (tau_t, a) = r(tau_t, a) + gamma integral P(tau_(t+1) mid(|) tau_t, a) max_(a') Q^* (tau_(t+1), a') dif tau_(t+1)
+$
+
+历史信息毕竟是一长串变量，而且长度可变，实际实现中将 $tau_t$ 直接作为状态不现实，同时考虑到马尔可夫链是一个时序系统，我们可以用 RNN 把历史 $tau_t$ 编码成固定长度的向量 $bold(h)$，即用 RNN 的隐藏状态 $bold(h)_t$ 作为 belief 的近似：
+
+$
+bold(h)_t = f(bold(h)_(t-1), o_t, a_(t-1))
+$
+
+就如 @fig:po_markov_chain_flow_rnn 中所示，循环神经元的个数就是 $bold(h)$ 的长度。这套框架可以无缝接入大部分强化学习算法，实现#underline[端到端学习]，即直接把 RNN 的输出代替状态 $s$ 接到 RL 输入。而且#underline[不需要 POMDP 的模型先验信息]，但也因此#underline[不保证泛化性能]，即 RNN 本身也可能学不到完整的状态空间。
+
+既然都用 RNN 了，同样思路下自然也可以把 RNN 替换成 LSTM 来编码 $tau_t$：
+
+$
+underbrace(bold(h)_t", "bold(c)_t, "encoded" tau_t) &= "LSTM" (underbrace(bold(h)_(t-1)", "bold(c)_(t-1), "encoded" tau_(t-1)), a_(t-1), o_t) in RR^m, \
+bold(h)_0, bold(c)_0 &= "LSTM" (underbrace(bold(0)", "bold(0), "init"), underbrace(0", "o_0, "first"))
+$
+
+在这套框架上我们可以基于这套 "历史信息编码状态" 实现端到端 Q-Learning，使用的损失函数为：
+
+$
+cal(L) [theta] = EE [sum_(t=0)^n (r_t + gamma max_a q_(theta') (bold(h)_(t+1), bold(c)_(t+1), a) - q_theta (bold(h)_t, bold(c)_t, a_t))^2 mid(|) tau_n ~ cal(D)]
+$
+
+这就是*深度循环 Q 网络*（deep recurrent Q-networks，DRQN）算法。相比 DQN，由于引入了 RNN/LSTM，重放缓存等模块需要进行一些修改：
++ #underline[采样批次中的样本不再是状态转移（transistions）而应该是连续的片段（episodes）]，因为端到端训练中同时学习 LSTM 和 Q 的参数，而前者需要历史结构来正确学习编码历史。
++ 片段可能长度不一，所以在连续定长存储时需要采用补零填充等技巧，同时要注意填充的这部分不应该加入损失计算以防污染梯度。
+
+用 PyTorch 实现节选如下：
+
+#codly(zebra-fill: none)
+```python
+import torch as th
+
+batch = self.replay_buffer.sample()
+mask = batch['mask'][:-1]
+
+# compute all recurrent Q-values with function q
+first_act = th.zeros(1, *batch['actions'].shape[1:]) # a_(-1) = 0
+delayed_acts = th.cat([first_act, batch['actions'][:-1]], dim = 0)
+values = q(th.cat([delayed_acts, batch['observations']], dim = -1))[0]
+
+# derive the regression targets from the values
+max_v = ~batch['terminals'] * values.max(dim = -1, keepdim = True)[0]
+targets = (batch['rewards'][:-1] + gamma * max_v[1:]) * mask
+
+# derive the MSE loss to be optimized
+current_values = values[:-1].gather(dim = -1, index = batch['actions'][:-1]) * mask
+loss = mse_loss(current_values, targets.detach(), reduction = 'sum')
+
+# gradient descent step on supervised regression loss
+optimizer.zero_grad()
+(loss / mask.sum()).backward()
+optimizer.step()
+```
+
+举个实际的例子，考虑迷宫探索任务，智能体只能观察到第一人称视角的摄像头画面，每步可以选择前进或左右旋转一定角度，需要收集一些奖励物品并抵达终点，要求为 DQN 算法设计一个神经网络架构。
+
+这个问题中没有一个显式的、可观测的状态，考虑通过 LSTM 学习一个。可以猜测这个学到的隐含状态可能会表示智能体在迷宫中的位置和朝向、奖励和目标的相对位置、对环境的部分记忆等。
+
+一个合理的网络架构是先通过 CNN 等将输入图片特征进行编码，送入 LSTM 学习历史编码，再送入参数化 Q 网络，最后输出该输入（对应隐含状态）下各动作的价值函数值。
