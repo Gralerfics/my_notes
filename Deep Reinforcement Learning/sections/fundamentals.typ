@@ -7,7 +7,7 @@
 
 == Markov Chains
 
-我们将智能体的行为建模为一个*随机策略*（stochastic policy）$pi (A mid(|) S)$，即在状态为 $S$ 的条件下采取动作 $A$ 的概率分布。*状态*（state）是一种对当前已知信息的描述，例如智能体所处环境、内部状态等；*动作*（action）则是智能体可选的行动，采取后可能导致状态发生变化，转移到另一个状态，即*状态转移*（state transition）。
+我们将智能体的行为建模为一个*随机策略*（stochastic policy）$pi (a mid(|) s)$，即在状态为 $s$ 的条件下采取动作 $a$ 的概率分布。*状态*（state）是一种对当前已知信息的描述，例如智能体所处环境、内部状态等；*动作*（action）则是智能体可选的行动，采取后可能导致状态发生变化，转移到另一个状态，即*状态转移*（state transition）。
 
 在强化学习的背景下，我们会对 “在某状态下采取某动作” 的行为发放*奖励*（reward）以引导智能体的学习。奖励的发放也可以选取其他时机，例如采取动作后根据实际到达的新状态发放奖励等，不同约定互相之间通常都可转换，只是定义和符号差别。此处我们约定，#underline[某时刻的奖励仅为该时刻状态和动作的函数]。
 
@@ -30,35 +30,31 @@ $
 如果#underline[状态转移概率 $P$ 仅和当前时刻的状态和动作有关]，即满足马尔可夫性：
 
 $
-&P(S_(t+1) mid(|) S_t = s_t, A_t = a_t, S_(t-1) = s_(t-1), A_(t-1) = a_(t-1), dots) \
-=&P(S_(t+1) mid(|) S_t = s_t, A_t = a_t)
-$
+&PP(S_(t+1) = s mid(|) S_t = s_t, A_t = a_t, S_(t-1) = s_(t-1), A_(t-1) = a_(t-1), dots) \
+=&PP(S_(t+1) = s mid(|) S_t = s_t, A_t = a_t), quad forall s in cal(S)
+$ <equ:markov_property>
 
 则前述序列可视作一条*马尔可夫链*（Markov chain），其演化过程称为*马尔可夫决策过程*（Markov decision process，MDP），记为 $cal(M) = chevron.l cal(S), cal(A), rho, P, r chevron.r$，其中：
-- $cal(S)$ 为状态集合；
-- $cal(A)$ 为动作集合；
-- $rho$ 为初始状态先验分布，即有 $S_0 ~ rho (dot)$；
-- $P$ 为状态转移概率，即有 $S_(t+1) ~ P(dot mid(|) S_t = s_t, A_t = a_t)$；
-- $r$ 为奖励函数，按我们的约定有 $R_t equiv r_t = r(s_t, a_t)$。
+- $cal(S)$ 为状态集合。
+- $cal(A)$ 为动作集合。
+- $rho(s)$ 为初始状态先验分布，即有 $S_0 ~ rho (dot)$。
+- $P(s' mid(|) s, a)$ 为状态转移概率，即有 $S_(t+1) ~ P(dot mid(|) s_t, a_t)$。
+- $r(s, a)$ 为奖励函数，按我们的约定有 $R_t equiv r_t = r(s_t, a_t)$。
 
-每时刻采取的动作则由随机策略 $pi$ 描述，即有 $A_t ~ pi (dot mid(|) S = s_t)$。
+每时刻采取的动作则由随机策略 $pi(a mid(|) s)$ 描述，即有 $A_t ~ pi (dot mid(|) s_t)$。
 
 #blockquote([
-  *关于随机变量与样本的符号约定*：
+    *关于概率、条件概率和概率分布的符号约定*：
 
-  规范一些来说，我们可以描述一个随机变量符合某个分布，而样本是一个确定值，比如状态转移概率 $P$ 严格来说应写成：
+    我们通常用#underline[概率函数] $PP$，表达某个 "事件" 的概率。考虑一个随机变量 $X$ 等于样本 $x$ 的概率，$X$ 不是事件，$x$ 也不是事件，$X = x$ 才是一个事件，所以严格来说应该写为 $PP(X = x)$。如果需要表达条件概率，就将条件写到竖线符号的后面，注意条件本身也是事件，所以严格来说概率函数都要写成像 @equ:markov_property 中的完整形式。
 
-  $
-  S_(t+1) ~ P(dot mid(|) S_t = s_t, A_t = a_t)
-  $
+    不过通常写完整会比较繁琐，所以可以#underline[适当简化]。在 MDP 中我们定义的一系列随机变量或样本之间都有对应的下标，如 $S_t = s_t$ 等，于是有时直接简略地将 $s_t$ 写到条件处，省去随机变量的标记；但如果是 $s$、$s'$ 等不明确的符号，则建议写出完整事件。
 
-  还有 $pi (a mid(|) s)$ 实际应该写成 $pi (A = a mid(|) S = s)$ 等。由于通常不影响含义表达，故#underline[课件上和其他大量强化学习教程中都混淆使用同样的符号来表达随机变量和样本的含义]，例如：
-  
-  $
-  s_(t+1) ~ P(dot mid(|) s_t, a_t)
-  $
+    #underline[注意区分]概率函数 $PP$ 和我们在 MDP 中定义的转移概率函数 $P$，后者实际上和 $rho$、$pi$ 一样，都是#underline[表示概率分布的函数]，即概率质量函数（离散情况）或概率密度函数（连续情况）。
+    
+    对于一个随机变量 $X$，我们可以用 $X ~ p(x)$ 表示其服从分布函数 $p(x)$，其中的 $x$ 只是表示自变量的任意符号，所以有时也写成 $X ~ p(dot)$ 避免混淆，用点号表示该函数的自变量。在 MDP 中我们定义了形如 $S_(t+1) ~ P(dot mid(|) s_t, a_t)$、$pi (dot mid(|) s_t)$ 的分布函数，里面存在用于表示条件竖线符号，但#underline[实际上这是容易混淆的]。#underline[这些函数中的 "条件" 实际上表示 "参数"]，而参数按惯例最好用分号隔开，或者标记到上下标等地方。例如 $S_(t+1)$ 服从的分布实际上是 $p(s) := P(s; s_t, a_t)$，只有 $s$ 是自变量；$pi (dot mid(|) s)$ 实际最好写为 $pi (dot; s)$ 等。
 
-  其中条件概率中的随机变量也可能省略，例如 $s_t$ 能看出表示 $t$ 时刻状态就不再写 $S_t = s_t$；如果换其他符号看不出时，就要显式写 $S_(t+1) = s'$。
+    不过由于竖线符号在各种材料中用得实在太多，这里我们就接受 $pi (a mid(|) s)$ 等写法，但要注意不能混淆其本意。
 ])
 
 #figure(
@@ -72,7 +68,7 @@ $
 Tau := {S_0, A_0, R_0, dots, S_n} ~ p_Tau (dot; cal(M), pi)
 $
 
-我们用#underline[分号表达 “参数” 的含义]，和条件概率中的竖线不同；有时我们也将参数写到上标之类的地方，理解即可。严格来说，$n$ 也应该写在 MDP 参数里，不过我们主要考虑 $n -> infinity$，通常就不写了。
+如前约定，我们用分号表达 “参数” 的含义。严格来说，$n$ 也应该写在 MDP 参数里，不过我们主要考虑 $n -> infinity$，通常就不写了。
 
 在我们的讨论范畴内#underline[通常默认 MDP 模型]（部分证明涉及给定模型下不同策略的比较），所以可以只标记 $pi$ 用以区分，类似地还有之后的 $EE_pi$、$V^pi$ 等记号，故之后会出现如下形式表达：
 
@@ -89,6 +85,8 @@ $ <equ:ee_pi_def>
 $
 EE_rho [dot] = EE_(S_0~rho(dot)) [dot]
 $ <equ:ee_rho_def>
+
+详细的关于期望与条件期望的符号约定详见 @sec:bellman_expectation_equations 中的某处注释。
 
 == Return and Value Functions
 
@@ -107,7 +105,7 @@ $ <equ:vfunc_def>
 这个期望回报称为*值函数*（value function），表示在使用策略 $pi$ 的前提下从 $s$ 出发获得的平均折扣回报，加了条件 $S_0 = s$ 表示#underline[对给定策略下某个状态平均价值的一种衡量]。应用全概率公式引入初态先验分布 $rho$ 即可得到#underline[对整个策略平均价值的衡量]：
 
 $
-J^pi := EE_pi [sum_(t=0)^infinity gamma^t R_t] = EE_rho [V^pi (s_0)]
+J^pi := EE_pi [sum_(t=0)^infinity gamma^t R_t] = EE_rho [V^pi (S_0)]
 $ <equ:j_def_and_jv_relation>
 
 为了更好地研究策略，我们有时还希望#underline[衡量在某状态下采取某动作的平均价值]，故引入*动作值函数*（action-value function）：
@@ -239,7 +237,7 @@ $ <equ:qv_relation>
   再利用时移性质 @equ:vfunc_time_shift_prop 将期望替换为 $V^pi (s')$ 即可得 @equ:qv_relation。
 ])
 
-== Bellman Expectation Equations
+== Bellman Expectation Equations <sec:bellman_expectation_equations>
 
 我们可以推导出关于值函数的递推表达式：
 
@@ -256,33 +254,51 @@ Q^pi (s, a) &= r(s, a) + gamma EE_(S'~P(dot mid(|) s, a), A'~pi (dot mid(|) S'))
 $ <equ:q_bellman_expectation>
 
 #blockquote([
-  *关于期望与条件期望的符号约定*：
+    *关于期望与条件期望的符号约定*：
 
-  #underline[在课件中]，值函数是这样定义和展开的：
+    #underline[在课件中]，值函数是这样定义和展开的：
 
-  $
-  V^pi (s) := EE_pi [sum_(t=0)^infinity gamma^t r_t mid(|) s_0 = s] = EE [r(s, a) + gamma V^pi (s') mid(|) inline(mat(delim: #none, a~pi (dot mid(|) s); s'~P(dot mid(|) s, a)))]
-  $ <equ:vfunc_def_and_expect_equ_slides_ver>
+    $
+    V^pi (s) := EE_pi [sum_(t=0)^infinity gamma^t r_t mid(|) s_0 = s] = EE [r(s, a) + gamma V^pi (s') mid(|) inline(mat(delim: #none, a~pi (dot mid(|) s); s'~P(dot mid(|) s, a)))]
+    $ <equ:vfunc_def_and_expect_equ_slides_ver>
 
-  其记号存在诸多混淆之处，不过确实如果处处都写完整比较繁琐，表意到位即可。后文中我们#underline[尽量不采用混淆的写法]，但同时也在此澄清课件写法的含义。
-  
-  首先，形如 $s_0 = s$ 等写法混淆了随机变量和样本，按照我们之前的定义应该写 $S_0 = s$ 用以区分。
-  
-  第二，求期望需要明确的是随机变量及其采样自什么分布。值函数定义中条件期望的条件约束了初始状态 $s_0$，求和式中则使用了各时刻的奖励 $r_t$，比起列举所有变量，我们可以直接令这里的随机变量是服从轨迹概率分布的随机序列 $Tau$，即前述 $Tau ~ p_Tau (dot; cal(M), pi)$，其包含了所有的状态、动作和奖励，而 $EE_pi [dot]$ 的含义如 @equ:ee_pi_def 所述。
-  
-  第三，一般不会像第二个等号这样将随机变量和及其分布写到条件期望条件的位置上去，而是写在 $EE$ 下标处或者直接省略。
+    其记号存在诸多混淆之处，不过确实如果处处都写完整比较繁琐，表意到位即可。后文中我们#underline[尽量不采用混淆的写法]，但同时也在此澄清课件写法的含义。
 
-  如此我们就统一了 @equ:v_bellman_expectation 和 @equ:vfunc_def_and_expect_equ_slides_ver 的形式。接下来补充部分其他公式在课件里的写法，方便对照：
+    首先，形如 $s_0 = s$ 等写法混淆了随机变量和样本，按照我们之前的定义应该写 $S_0 = s$ 用以区分。
 
-  $
-  J^pi := EE_pi [sum_(t=0)^infinity gamma^t r_t] &= EE_rho [V^pi (s_0)] = EE [sum_(t=0)^infinity gamma^t r(s_t, a_t) mid(|) inline(mat(delim: #none, s_0~rho(dot)", "a_t~pi (dot mid(|) s_t); s_(t+1)~P(dot mid(|) s_t, a_t)))]
-  $
+    第二，求期望需要明确的是随机变量及其采样自什么分布。值函数定义中条件期望的条件约束了初始状态 $s_0$，求和式中则使用了各时刻的奖励 $r_t$，比起列举所有变量，我们可以直接令这里的随机变量是服从轨迹概率分布的随机序列 $Tau$，即前述 $Tau ~ p_Tau (dot; cal(M), pi)$，其包含了所有的状态、动作和奖励，而 $EE_pi [dot]$ 的含义如 @equ:ee_pi_def 所述。
 
-  $
-  Q^pi (s, a) := EE_pi [sum_(t=0)^infinity gamma^t r_t mid(|) inline(mat(delim: #none, s_0 = s; a_0 = a))] = r(s, a) + gamma EE [Q^pi (s', a') mid(|) inline(mat(delim: #none, s'~P(dot mid(|) s, a); a'~pi (dot mid(|) s')))]
-  $
+    第三，一般不会像第二个等号这样将随机变量和及其分布写到条件期望条件的位置上去，而是写在 $EE$ 下标处或者直接省略。
 
-  此后关于这类符号问题不再赘述。
+    如此我们就统一了 @equ:v_bellman_expectation 和 @equ:vfunc_def_and_expect_equ_slides_ver 的形式。接下来补充部分其他公式在课件里的写法，方便对照：
+
+    $
+    J^pi := EE_pi [sum_(t=0)^infinity gamma^t r_t] &= EE_rho [V^pi (s_0)] = EE [sum_(t=0)^infinity gamma^t r(s_t, a_t) mid(|) inline(mat(delim: #none, s_0~rho(dot)", "a_t~pi (dot mid(|) s_t); s_(t+1)~P(dot mid(|) s_t, a_t)))]
+    $
+
+    $
+    Q^pi (s, a) := EE_pi [sum_(t=0)^infinity gamma^t r_t mid(|) inline(mat(delim: #none, s_0 = s; a_0 = a))] = r(s, a) + gamma EE [Q^pi (s', a') mid(|) inline(mat(delim: #none, s'~P(dot mid(|) s, a); a'~pi (dot mid(|) s')))]
+    $
+
+    此外还有需要特别说明的一点，关于期望的嵌套（条件期望的 tower property 中经常出现）。例如对随机变量 $X$ 和 $Y$ 的表达式 $f(X,Y)$ 求期望，则有：
+
+    $
+    EE_(X,Y) [f(X,Y)] = EE_(X,Y) [EE_(X,Y) [f(X,Y) mid(|) Y = Y]]
+    $
+
+    这里条件 $Y = Y$ 的写法是令人迷惑的。实际上，左侧的 $Y$ 是内侧 $EE$ 的随机变量，而右侧的 $Y$ 是外侧期望的随机变量（对内侧期望来说是常数），所以#underline[为了不混淆最好重命名一下内侧的随机变量]：
+
+    $
+    EE_(X,Y) [f(X,Y)] = EE_(X,Y) [EE_(X',Y') [f(X',Y') mid(|) Y' = Y]]
+    $
+
+    不过后文例如嵌套 $EE_pi$ 时不高兴一个一个重命名并说明，有时就不重命名，直接简写一个 $Y$ 表示这个条件：
+
+    $
+    EE_(X,Y) [f(X,Y)] = EE_(X,Y) [EE_(X,Y) [f(X,Y) mid(|) Y]]
+    $
+
+    此后关于这类符号问题不再赘述。
 ])
 
 #blockquote([
@@ -360,7 +376,7 @@ $
 exists pi^*, quad V^(pi^*) (s) equiv V^* (s) >= V^pi (s), quad forall pi, forall s in cal(S)
 $ <equ:optimal_policy_exists_assumption>
 
-动作值函数同理。实际上这个假设对大部分情况都成立，因为我们用 $pi (A mid(|) S)$ 对策略建模，本身就可以针对每个 $s$ 设计策略，而将所有状态下的最优子策略拼在一起即可得到最优策略。
+动作值函数同理。实际上这个假设对大部分情况都成立，因为我们用 $pi (a mid(|) s)$ 对策略建模，本身就可以针对每个 $s$ 设计策略，而将所有状态下的最优子策略拼在一起即可得到最优策略。
 
 之前推导了值函数和动作值函数的关系，这里也有#underline[最优值函数和最优动作值函数的关系]：
 

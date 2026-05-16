@@ -399,11 +399,11 @@ self.target_model_update()
 
 === Reason For Using "Deep" Learning
 
-#Cre("TODO").
+#Cre("TODO")
 
 === Q-Learning extensions
 
-#Cre("TODO").
+#Cre("TODO")
 
 // RL software architecture
 // Double Q-learning (*)
@@ -414,7 +414,27 @@ self.target_model_update()
 
 === Partial Observability
 
-#Cre("TODO").
+现实中经常会出现系统中状态 $s$ 不可观测的情况，考虑*部分可观马尔可夫决策过程*（partiall observable Markov decision process，POMDP），相比普通 MDP 加入了取决于状态的*观测*（observations）变量 $o_t ~ O(dot mid(|) s_t) in cal(O)$，轨迹变为：
+
+$
+Tau := {O_0, A_0, R_0, O_1, dots, R_(t-1), O_t}
+$
+
+按照之前的假设，状态转移仍然是关于状态和动作的分布；奖励也依旧是关于状态和动作的确定函数，所以也可以不把奖励当随机变量处理：
+
+$
+Tau := {O_0, A_0, O_1, dots, A_(t-1), O_t} in (cal(O) times cal(A))^t times cal(O)
+$
+
+可以定义*信念分布*或称*状态认知分布*（belief distribution）：
+
+$
+b(s mid(|) tau_t) := PP(S_t = s mid(|) o_0, a_0, dots, o_t)
+$
+
+其中 $tau_t$ 是估计到 $o_t$ 为止的样本，同时依旧将条件中的随机变量等简写为样本。
+
+#Cre("TODO")
 
 // Deep Recurrent Q-Networks (DRQN)
 // Neural Architecture

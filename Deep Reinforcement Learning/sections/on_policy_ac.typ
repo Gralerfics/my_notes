@@ -6,7 +6,7 @@
 
 = Policy Optimization and On-Policy Actor-Critic
 
-考虑与先前学习值函数的方式不同的另一条思路，直接学习策略分布。定义参数化的策略 $pi_theta (A mid(|) S)$，依旧最优化总体期望回报 $J^(pi_theta) := EE_pi [sum_(t=0)^infinity gamma^t R_t]$。先考虑最朴素的方法，即直接求 $J^(pi_theta)$ 的梯度用于梯度上升。
+考虑与先前学习值函数的方式不同的另一条思路，直接学习策略分布。定义参数化的策略 $pi_theta (a mid(|) s)$，依旧最优化总体期望回报 $J^(pi_theta) := EE_pi [sum_(t=0)^infinity gamma^t R_t]$。先考虑最朴素的方法，即直接求 $J^(pi_theta)$ 的梯度用于梯度上升。
 
 这一类优化策略的方法可以按特点归纳到一张谱图上，如 @fig:policy_opt_spectrum 所示，本章节先讨论左侧三类方法。顺便，图中 TRPO/PPO 被划分在了 off-policy loss 中，这是不太常见的，虽然 TRPO/PPO 会多次使用部分更新前策略的样本，但由于更新幅度小一般还是算作 on-policy 算法，所以放到该章节中，详见后文。
 
@@ -105,10 +105,10 @@ $
 
 === REINFORCE
 
-REINFORCE 算法的核心思路就是直接用采样所得轨迹样本去估计这个期望，从而更新策略。我们要最大化总期望回报，即最小化损失函数 $cal(L)_pi [theta] := -J^(pi_theta)$，梯度为：
+REINFORCE 算法的核心思路就是直接用采样所得轨迹样本去估计这个期望，从而更新策略。我们要最大化总期望回报，即最小化损失函数 $cal(L)_(pi_theta) [theta] := -J^(pi_theta)$，梯度为：
 
 $
-nabla_theta cal(L)_pi [theta]
+nabla_theta cal(L)_(pi_theta) [theta]
 &= -EE_(pi_theta) [sum_(t=0)^infinity gamma^t G_t nabla_theta ln pi_theta (A_t mid(|) S_t)] \
 &approx nabla_theta [-1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t g_t^i ln pi_theta (a_t^i mid(|) s_t^i)]
 $
@@ -202,7 +202,7 @@ Actor-Critic 只是架构的名称，在我们选取值函数作为 baseline，�
 朴素的优势估计使用 $g_t^i - v_(phi.alt) (s_t^i)$，对应样本损失函数：
 
 $
-cal(L)'_pi [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($g_t^i - v_(phi.alt) (s_t^i)$)]
+cal(L)'_(pi_theta) [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($g_t^i - v_(phi.alt) (s_t^i)$)]
 $
 
 需要注意的是这里的 $g_t$ 需要通过整条（后半条）轨迹样本计算得到，这种优势估计是基于完整轨迹的 *Monte-Carlo* 估计。减去 baseline 虽然降低了一部分方差，但整条轨迹包含大量的随机性，样本方差通常很大，这部分方差靠 baseline 无法解决。
@@ -210,7 +210,7 @@ $
 为此，我们考虑与 Monte-Carlo 估计相对的，前面 Q-Learning 中提到过的*有限差分*（temporal difference，TD）估计。这是基于 bootstrapping 的一步估计，可能引入偏差，但因为单个样本短，能显著降低方差。具体地，假设 $v_(phi.alt) (s_(t+1)^i) approx V^(pi_theta) (s_(t+1)^i)$，用 TD 估计作为优势估计，采用样本损失函数：
 
 $
-cal(L)''_pi [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($r_t^i + gamma v_(phi.alt) (s_(t+1)^i) - v_(phi.alt) (s_t^i)$)]
+cal(L)''_(pi_theta) [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($r_t^i + gamma v_(phi.alt) (s_(t+1)^i) - v_(phi.alt) (s_t^i)$)]
 $
 
 由于 bootstrapping，这个估计是有偏的（证明 TODO）。
@@ -272,7 +272,97 @@ $
 
 == Trust Region Methods
 
+=== Off-Policy Gradients
+
+前面提到过，Actor-Critic 等 on-policy 算法的典型问题在于样本利用率低，只能使用当前策略采样的样本进行更新。为了更好地说明这一点，我们试着直接推导 off-policy 梯度，即尝试使用来自另一个策略 $mu$ 的样本来更新当前策略 $pi_theta$。
+
+首先约定：
++ 行为策略 $mu (a mid(|) s)$ 满足 $(pi_theta (a mid(|) s))/(mu (a mid(|) s)) < infinity, forall a in cal(A), forall s in cal(S)$。
++ $xi_t^(pi_theta) (s)$ 表示采用策略 $pi_theta$ 执行 $t$ 步后状态 $s$ 的分布。
+
+于是之前 REINFORCE 的损失函数梯度可以进一步化为：
+
+$
+nabla_theta cal(L)_(pi_theta) [theta]
+
+&= -EE_(pi_theta) [sum_(t=0)^infinity gamma^t G_t #Cgr($nabla_theta ln pi_theta (A_t mid(|) S_t)$)] \
+
+&= -integral xi_t^(pi_theta) (s_t) integral pi_theta (a_t mid(|) s_t) sum_(t=0)^(n-1) gamma^t #Cbl($EE_(pi_theta) [G_t mid(|) s_t, a_t]$) #Cgr($(nabla_theta pi_theta (a_t mid(|) s_t)) / (pi_theta (a_t mid(|) s_t))$) dif a_t dif s_t \
+
+&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral cancel(pi_theta (a_t mid(|) s_t)) gamma^t #Cbl($Q^(pi_theta) (s_t, a_t)$) (nabla_theta pi_theta (a_t mid(|) s_t)) / cancel(pi_theta (a_t mid(|) s_t)) dif a_t dif s_t \
+
+&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral #Cpu($mu (a_t mid(|) s_t)$) gamma^t Q^(pi_theta) (s_t, a_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / (#Cpu($mu (a_t mid(|) s_t)$)) dif a_t dif s_t \
+$
+
+这里把期望展开成积分形式和求和形式只是连续和离散的区别，意思差不多。接下来写成采用策略 $mu$ 的轨迹的期望形式（即 $EE_mu [dot] := EE_(Tau~p_Tau^mu (dot)) [dot]$，与 $EE_pi$ 对应）：
+
+$
+nabla_theta cal(L)_(pi_theta) [theta]
+
+&= -sum_(t=0)^(n-1) integral xi_t^mu (s_t) (xi_t^(pi_theta) (s_t))/(xi_t^mu (s_t)) integral mu (a_t mid(|) s_t) gamma^t Q^(pi_theta) (s_t, a_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / (mu (a_t mid(|) s_t)) dif a_t dif s_t \
+
+&= -EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t Q^(pi_theta) (S_t, A_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t #Cbl($Q^(pi_theta) (S_t, A_t)$) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t underbrace(#Cbl($(R_t + gamma V^(pi_theta) (S_(t+1)) - V^(pi_theta) (S_t))$), A^(pi_theta) (S_t, R_t, S_(t+1))) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+$
+
+这就是尝试用 $mu$ 的样本去更新 $pi_theta$ 的所谓 off-policy 梯度公式。假如现在就直接用这个式子尝试实现一个 Actor-Critic 架构的 off-policy 算法，$V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 替代；$(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 不知道，就当作是 $1$，即假设两种策略相近，从而状态分布也接近。于是损失函数梯度为：
+
+$
+nabla_theta cal(L)_mu [theta] :&= -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+&approx nabla_theta cal(L)_(pi_theta) [theta]
+$
+
+这个式子大致可以理解为从优势函数 $A^(pi_theta)$ 中按系数 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling）。在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。
+
+具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
+
+#blockquote([
+    *关于重要性采样*：
+
+    #Cre("TODO")
+])
+
 === Trust-Region Policy Optimization (TRPO)
+
+不稳定的原因归根结底还是在于刚刚直接直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项，实际上这个比值很不稳定。如若对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，即最好要求：
+
+$
+xi_t^mu (s) >0, forall s in {s mid(|) xi_t^(pi_theta) (s) > 0} subset.eq cal(S)
+$
+
+若新策略较旧策略更新太多，上述情况出现概率就更大，且其他状态下的比值可能也会离 $1$ 比较远，从而导致训练不稳定。
+
+TRPO 算法的思想很粗暴，就是围绕旧行为策略 $mu = pi_(theta')$建立一个*信任域*（trust region），并要求反复使用这部分旧样本更新所得的新策略 $pi_theta$ 不允许超出这个信任域，于是问题变为带约束的优化问题：
+
+$
+min_theta cal(L)_mu [theta] quad "s.t." quad EE_mu [sum_(t=0)^(n-1) D_"KL" [mu (dot mid(|) S_t) || pi_theta (dot mid(|) S_t)]] <= delta
+$
+
+信任域衡量的是分布之间的 "距离"，所以直接使用了 KL 散度（Kullback-Leibler divergence）的概念，它衡量的是用一个近似概率分布 $q$ 来描述真实分布 $p$ 时所引入的信息损失：
+
+$
+D_"KL" (p || q) := integral_(-infinity)^infinity p(x) log (p(x))/(q(x)) dif x
+$
+
+这个带约束非线性优化问题看着就很棘手，实际实现中可以采用 *Taylor 估计*（Taylor approximation），也就是在当前参数附近做二阶泰勒展开（Hessian），把问题转为*二次约束二次规划*（quadratic constraints quadratic programming，QCQP）问题。
+
+每次更新，当前（旧）策略为 $mu$，参数位于 $theta_mu$，在此处有梯度 $bold(g) := lr(nabla_theta cal(L)_mu [theta] |)_(theta=theta_mu)$ 和 Hessian 矩阵 $bold(H)$。于是损失函数和约束分别近似为：
+
+$
+cal(L)_mu [theta] approx bold(g)^top (theta - theta_mu), quad
+D_"KL" [mu || pi_theta] approx 1/2 (theta - theta_mu)^top bold(H) (theta - theta_mu)
+$
+
+求解上述优化问题得解：
+
+$
+theta^* = theta_mu + alpha sqrt((2 delta)/(bold(g)^top bold(H)^(-1) bold(g))) bold(H)^(-1) bold(g)
+$
+
+这个解称为*自然策略梯度*（natural policy gradient）。此外，由于我们是近似得到的，所以照这样更新还是有可能违反 KL 约束，所以式中的 $alpha$ 就是 TRPO 在此基础上添加的系数，可以通过*线搜索*（line search）去找到尽可能大的符合约束的 $alpha$，具体地，比如说先试 $alpha = 1$，不对就尝试乘一个因子缩小一点再尝试，如此往复直到符合约束。
 
 === Proximal Policy Optimization (PPO)
 
