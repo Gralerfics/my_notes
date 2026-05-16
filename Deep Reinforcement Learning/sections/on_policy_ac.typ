@@ -308,26 +308,40 @@ nabla_theta cal(L)_(pi_theta) [theta]
 &= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t underbrace(#Cbl($(R_t + gamma V^(pi_theta) (S_(t+1)) - V^(pi_theta) (S_t))$), A^(pi_theta) (S_t, R_t, S_(t+1))) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
 $
 
-这就是尝试用 $mu$ 的样本去更新 $pi_theta$ 的所谓 off-policy 梯度公式。假如现在就直接用这个式子尝试实现一个 Actor-Critic 架构的 off-policy 算法，$V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 替代；$(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 不知道，就当作是 $1$，即假设两种策略相近，从而状态分布也接近。于是损失函数梯度为：
+这就是尝试用 $mu$ 的样本去更新 $pi_theta$ 的所谓 off-policy 梯度公式。假如现在就直接用这个式子尝试实现一个 Actor-Critic 架构的 off-policy 算法，$V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 近似；$(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 难算或者不知道，如果两种策略相近就可以近似为 $1$。于是损失函数梯度为：
 
 $
-nabla_theta cal(L)_mu [theta] :&= -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+nabla_theta cal(L)_mu [theta] &approx -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t bold(A)_t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
 &approx nabla_theta cal(L)_(pi_theta) [theta]
 $
 
-这个式子大致可以理解为从优势函数 $A^(pi_theta)$ 中按系数 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling）。在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。
+这个式子大致可以理解为从优势 $A^(pi_theta)_t$（加上标避免和动作 $A_t$ 混淆）中按系数 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling）。// TODO？实际实现中经常省略 $gamma^t$，直接使用 $-nabla_theta EE_mu [sum_(t=0)^(n-1) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) A^(pi_theta)_t]$，形式简洁。
 
-具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
+在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
 
 #blockquote([
     *关于重要性采样*：
 
-    #Cre("TODO")
+    假设有一个函数 $f(X)$，我们希望求其在 $X ~ pi (dot)$ 分布上的期望，即：
+
+    $
+    E_pi [f] = integral_x pi(x) f(x) dif x
+    $
+
+    但假如现在我们无法直接从 $pi (x)$ 上进行采样，只能从另一个分布 $mu (x)$ 上采样（比如说样本已经是现成的来自 $mu$ 的样本，或者 $pi$ 太复杂等情况），那么我们就需要通过来自 $mu$ 的样本间接地获取 $pi$ 下的期望：
+
+    $
+    E_pi [f] = integral_x pi(x) f(x) dif x = integral_x mu(x) pi(x)/mu(x) f(x) dif x = E_mu [pi(x)/mu(x) f(x)]
+    $
+
+    这样一来，用 $mu$ 上采集的样本，乘上一个重要性采样比 $pi(x)/mu(x)$ 再求期望就可以得到 $pi$ 上采集样本时的期望。
 ])
 
 === Trust-Region Policy Optimization (TRPO)
 
-不稳定的原因归根结底还是在于刚刚直接直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项，实际上这个比值很不稳定。如若对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，即最好要求：
+TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+// 不稳定的原因归根结底还是在于刚刚直接直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项，实际上这个比值很不稳定。如若对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，即最好要求：
 
 $
 xi_t^mu (s) >0, forall s in {s mid(|) xi_t^(pi_theta) (s) > 0} subset.eq cal(S)
@@ -366,4 +380,20 @@ $
 
 === Proximal Policy Optimization (PPO)
 
+在 TRPO 上再进一步就是喜闻乐见，在实践中经常使用的*近端策略优化*（proximal policy optimization，PPO）算法了。
+
+如前所述，TRPO 的约束还是太复杂了，虽然可以二阶近似求解但还是有点麻烦，或许可以更简单一点。
+
+// 回到 $cal(L)_mu [theta]$ 中的策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$，考虑直接将它卡（"clip"）到 $1 plus.minus epsilon.alt$ 的范围里，同样也能确保旧策略和新策略不要离太远，但比 KL 散度约束要更简单粗暴。
+
+具体地，
+
+#Cre("TODO")
+
+与之前会不稳定的直接 off-policy 梯度更新法比较，PPO 随着样本重复使用次数提高显著加速训练，同时稳定性也不错，不过在动作集规模 $abs(cal(A))$ 较大时容易不稳定。
+
+回到谱图 @fig:policy_opt_spectrum，TRPO/PPO 算法依旧是#underline[随机策略]、#underline[采用 Actor-Critic 架构估计值函数]的算法。此外章节初提到过，TRPO/PPO 虽然涉及样本复用，但我们还是将其划分为 on-policy 算法；图中的划分方式倒也可以理解，因为基本的损失函数 $cal(L)_mu [theta]$ 确实是基于 off-policy 思想推导的，所以称为 "off-policy loss"，只不过 TRPO/PPO 在新旧策略分布上做了一些约束以确保没有 "off" 得太远。
+
 === Group Relative Policy Optimization (GRPO)
+
+#Cre("TODO")
