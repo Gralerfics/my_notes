@@ -26,7 +26,7 @@ $
 Q (s, a) <- 1, quad forall s, a
 $
 
-让智能体在环境中进行探索，用*有限差分*（temporal difference，TD）目标进行更新。具体地，任意 $t$ 时刻发生状态转移时得到一组新数据 $(s_t, a_t, r_t, s_(t+1))$，定义目标：
+让智能体在环境中进行探索，用*时序差分*（temporal difference，TD）目标进行更新。具体地，任意 $t$ 时刻发生状态转移时得到一组新数据 $(s_t, a_t, r_t, s_(t+1))$，定义目标：
 
 $
 y_t := r_t + gamma max_a Q (s_(t+1), a)
@@ -44,7 +44,7 @@ $
 Q (s_t, a_t) <- Q (s_t, a_t) + alpha (y_t - Q (s_t, a_t))
 $ <equ:tab_ql_update_residue>
 
-其中 $y_t - Q (s_t, a_t)$ 被称为*有限差分误差*（TD error）。// 如此迭代，最终将会有 $Q (s, a) -> Q^* (s, a)$，证明暂略。
+其中 $y_t - Q (s_t, a_t)$ 被称为*时序差分误差*（TD error）。// 如此迭代，最终将会有 $Q (s, a) -> Q^* (s, a)$，证明暂略。
 
 值得注意的是，智能体探索时所实际执行的策略即*行为策略*（behavior policy）是基于 $Q$ 估计值计算的，而更新式中 $max_a Q (s_(t+1), a)$ 说明更新时所用的策略即*目标策略*（target policy）是取当前估计下的最优策略。故在 Q-Learning 中，行为策略和目标策略不一致，这种类型的算法称为 off-policy 算法。关于 on-/off-policy 会在后文 @sec:experience_replay 中更详细地讨论。
 
@@ -237,7 +237,7 @@ $
 
 这样在更新时就有 $nabla_theta v_(theta') (S_(t+1)) = 0$，对应舍去的那一部分梯度。实际更新时 $theta'$ 的数值是和 $theta$ 相等的（$theta' = theta$），所以说明白点就#underline[只是反向传播时切断了 $theta'$ 的这一部分梯度]，前向传播时照旧。
 
-以上更新方式称为*半梯度有限差分学习*（semi-gradient TD-learning）。在 PyTorch 具体实现中，给相应项加上 `.detach()` 即可实现只截断某一部分反向传播的操作。该方案#underline[比残差梯度法更快且无偏]，对#underline[线性模型可以证明收敛]，例如前文表格 Q-Learning 的例子。
+以上更新方式称为*半梯度时序差分学习*（semi-gradient TD-learning）。在 PyTorch 具体实现中，给相应项加上 `.detach()` 即可实现只截断某一部分反向传播的操作。该方案#underline[比残差梯度法更快且无偏]，对#underline[线性模型可以证明收敛]，例如前文表格 Q-Learning 的例子。
 
 但#underline[采用神经网络等模型参数化值函数时就很容易发散]，这是由于模型估计误差、自举性等因素复杂综合导致的。引入 $theta'$ 只能弱化耦合而无法消除，因为终究无法得到真实的 $Q^*$ 充当优化目标。
 

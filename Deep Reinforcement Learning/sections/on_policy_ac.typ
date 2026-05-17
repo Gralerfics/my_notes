@@ -160,85 +160,177 @@ $
 #blockquote([
     *关于 baseline 的选取与对方差的优化*：
 
-    此外，选值函数直观简单，但在 "最小化梯度方差" 这一目标下并非最优。TODO
+    此外，选值函数直观简单，但在 "最小化梯度方差" 这一目标下并非最优。#Cre("TODO")
+    // https://www.zhihu.com/question/344367451/answer/813387514
 ])
 
-#underline[接下来的问题是 REINFORCE 框架下并没有估计值函数]，所以需要一个分支负责估计值函数。值函数是对当前策略价值的衡量，评估一个策略的好坏，所以该分支称为*批评者*（critic），维护一个#underline[参数化的值函数估计] $v_(phi.alt) (s) approx V^(pi_theta) (s)$；原本负责探索、采样的分支则称为*执行者*（actor），并用估计的优势进行策略更新，此即 Actor-Critic 名称的由来。
+#underline[接下来的问题是 REINFORCE 框架下并没有估计值函数]，所以需要一个分支负责估计值函数。值函数是对当前策略价值的衡量，评估一个策略的好坏，所以该分支称为*批评者*（critic），维护一个参数化的*值函数估计* $v_(phi.alt) (s) approx V^(pi_theta) (s)$；原本负责探索、采样的分支则称为*执行者*（actor），并用*对优势的估计*进行策略更新。
+
+此即 Actor-Critic 名称的由来，优势估计和值函数估计也是 Actor-Critic 架构下最关键的两个问题。
 
 === Value Function Estimation
 
-那么 critic 具体怎么学习 $v_(phi.alt) (s)$？基于采样所得轨迹 $tau_infinity = {s_t, a_t, r_t}_(t=0)^infinity$，采用均方误差损失函数：
+我们先#underline[讨论值函数估计的具体方法]，即 critic 如何学习 $v_(phi.alt) (s)$。基于采样所得轨迹 $tau_infinity = {s_t, a_t, r_t}_(t=0)^infinity$，采用均方误差损失函数：
 
 $
 cal(L) [phi.alt] := sum_(t=0)^infinity (overbrace(underbrace(y_t (tau_infinity), "targets") - underbrace(v_(phi.alt) (s_t), "value"), "advantage"))^2
 $
 
-其中目标（targets）的选择有很多种。首先是#underline[多步目标]（n-step targets）：
+其中目标（targets）的选择有很多种。规范起见，定义轨迹样本从 $l$ 时刻到 $r$ 时刻的切片：
 
 $
-y_t^n (tau_n) := sum_(k=0)^(n-1) gamma^k r_(t+k) + gamma^n v_(phi.alt) (s_(t+n))
+tau_(l:r) = {s_l, a_l, r_l, s_(l+1), dots, r_(r-1), s_r}
 $
 
-即前 $n$ 步用样本计算，余下的远未来项用值函数估计，对于任意 $n in NN$，多步目标的期望都等于 $V^pi (s_t)$（#Cre("TODO")：bootstrapping？）。
+顺便定义 $tau_r := tau_(:r) := tau_(0:r)$ 表示从头开始到 $r$ 结束的片段，$tau_infinity$ 也可以纳入其中。
 
-注意到当 $n=1$ 时，$y_t^1 (tau_infinity) := r_t + gamma v_(phi.alt) (s_(t+1))$ 就是 #underline[TD 目标]，收敛慢（迭代次数多）而方差较小。然后是 #underline[Monte-Carlo 目标]，收敛快（迭代次数少）但方差较大：
-
-$
-y_t^"MC" (tau_infinity) := lim_(n->infinity) y_t^n (tau_n)
-$
-
-在 Monte-Carlo 和 TD 之间用一个系数 $lambda in [0, 1]$ 作折中，即 $"TD"(lambda)$ 目标：
+当手上有一段长度为 $n$ 的轨迹切片 $tau_(t:t+n)$ 时，最自然的想法就是把这些样本全都利用上。前 $n$ 步有样本就用样本计算，余下的远未来项用值函数估计，此即#underline[多步目标]（n-step targets）：
 
 $
-y_t^lambda (tau_infinity) := (1-lambda) sum_(n=0)^infinity lambda^n y_t^(n+1) (tau_infinity)
+y_t^n (tau_(t:t+n)) := sum_(k=0)^(n-1) gamma^k r_(t+k) + gamma^n v_(phi.alt) (s_(t+n))
+$ <equ:ac_v_estimation_n_step_target>
+
+课件中括号里写的是 $tau_n$ 而非 $tau_(t:t+n)$，只表示了长度容易混淆，这里我们明确写出切片范围。这个 $tau_(l:r)$ 只是用来标注一下定义 $y_t^n$ 所需的变量，实际起点和长度取决于 $y_t^n$ 的上下标，#underline[简单起见]有时也会写包含所有信息的 $tau_infinity$，或者直接省略括号内的参数。
+
+直接计算可以得知对于任意 $n in NN$，#underline[多步目标的期望]都等于 $V^pi (s_t)$（#Cre("TODO")）。
+
+注意到当 $n=1$ 时，$y_t^1 (tau_infinity) := r_t + gamma v_(phi.alt) (s_(t+1))$ 就是常用的*时序差分*（temporal difference，TD）目标，特点是收敛慢（迭代次数多）而方差较小；当所用样本足够长时就是 *Monte-Carlo* 目标，特点是收敛快（迭代次数少）但方差较大：
+
+$
+y_t^"MC" (tau_infinity) := lim_(n->infinity) y_t^n (tau_infinity)
 $
 
-在 $lambda = 0$ 时它就是 TD 目标 $y_t^1 (tau_infinity)$；在 $lambda = 1$ 时它就是 Monte-Carlo 目标 $y_t^"MC" (tau_infinity)$。
+现在问题来了，TD 目标和 MC 目标各有优劣，如何综合二者的特点？直接使用多步目标虽然是一种折中方案，但固定了样本长度，并没有实现综合考虑短期和长期目标的效果。考虑无限长样本 $tau_infinity$，我们可以对所有长度 $[1, infinity)$ 的多步目标进行加权平均，选一个系数 $lambda in [0, 1]$，权重就采用几何级数 $lambda^k$，这称为 *$"TD"(lambda)$ 目标*：
+
+$
+y_t^("TD"(lambda)) (tau_infinity) := (1-lambda) sum_(k=0)^infinity lambda^k y_t^(k+1) (tau_infinity)
+$
+
+其中 $1-lambda$ 是归一化因子，用以确保 $sum_(k=0)^infinity lambda^k = 1/(1-lambda)$ 乘上它后能将权重和化为 $1$。$lambda$ 较小时级数衰减较快，较长的多步目标权重就低，对应地就偏向短期目标。可以验证，$lambda -> 0$ 时它就是 TD 目标 $y_t^1$，$lambda -> 1$ 时它就是 Monte-Carlo 目标 $y_t^"MC"$。
 
 === Advantage Actor-Critic (A2C)
 
-Actor-Critic 只是架构的名称，在我们选取值函数作为 baseline，将其与回报期望组合为 "优势" 进行估计时，实际上已经算是 Advantage Actor-Critic 即 A2C 算法。
-
-朴素的优势估计使用 $g_t^i - v_(phi.alt) (s_t^i)$，对应样本损失函数：
+接下来#underline[讨论优势估计的具体方法]。Actor-Critic 只是架构的名称，在我们选取值函数作为 baseline，将其与回报期望组合为 "优势" 进行估计时，实际上已经算是 *Advantage Actor-Critic* 即 A2C 算法。朴素的优势估计使用 $g_t^i - v_(phi.alt) (s_t^i)$，对应样本损失函数：
 
 $
 cal(L)'_(pi_theta) [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($g_t^i - v_(phi.alt) (s_t^i)$)]
-$
+$ <equ:mc_advantage_loss>
 
-需要注意的是这里的 $g_t$ 需要通过整条（后半条）轨迹样本计算得到，这种优势估计是基于完整轨迹的 *Monte-Carlo* 估计。减去 baseline 虽然降低了一部分方差，但整条轨迹包含大量的随机性，样本方差通常很大，这部分方差靠 baseline 无法解决。
+需要注意的是这里的 $g_t^i$ 需要通过第 $i$ 条轨迹样本的连续片段计算得到，故这种优势估计是基于轨迹片段（episodes）的 *Monte-Carlo* 估计。这种估计是#underline[无偏]的，且因为样本信息量大，训练较快；但整条的轨迹包含大量的随机性，导致样本#underline[方差通常很大]，这部分方差无法靠减去一个 baseline 优化。
 
-为此，我们考虑与 Monte-Carlo 估计相对的，前面 Q-Learning 中提到过的*有限差分*（temporal difference，TD）估计。这是基于 bootstrapping 的一步估计，可能引入偏差，但因为单个样本短，能显著降低方差。具体地，假设 $v_(phi.alt) (s_(t+1)^i) approx V^(pi_theta) (s_(t+1)^i)$，用 TD 估计作为优势估计，采用样本损失函数：
+为此，顺着经典思路，我们考虑与 Monte-Carlo 估计相对的 *TD* 估计。具体地，假设 $v_(phi.alt) (s_(t+1)^i) approx V^(pi_theta) (s_(t+1)^i)$，即允许用当前估计近似未来目标，就可以用 TD 估计作为优势估计，得到相应的样本损失函数：
 
 $
 cal(L)''_(pi_theta) [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($r_t^i + gamma v_(phi.alt) (s_(t+1)^i) - v_(phi.alt) (s_t^i)$)]
-$
+$ <equ:td_advantage_loss>
 
-由于 bootstrapping，这个估计是有偏的（证明 TODO）。
+由于引入 bootstrapping，这个估计是#underline[有偏]的（#Cre("TODO") 证明），但因为单个样本短，能显著#underline[降低方差]。
 
-自然，除了 MC 和 TD 估计，与值函数估计中 $"TD"(lambda)$ 对应地，优势估计中也有*广义优势估计*（generalized advantage estimation，GAE）：
-
-$
-hat(A)_t^lambda (tau_m) := (1-lambda)/(lambda-lambda^(m-t+1)) sum_(n=1)^(m-t) lambda^n (y_t^n (tau_m) - v_(phi.alt) (s_t))
-$
-
-课件中用的符号是 $G_t^lambda$，我们之前用 $G$ 表示折扣回报了，故换成 $hat(A)$，更直白地说明它是对优势函数的估计。当 $lambda -> 0$ 时，$hat(A)_t^lambda (tau_m) -> y_t^1 (tau_m) - v_(phi.alt) (s_t) = r_t + gamma v_(phi.alt) (s_(t+1)) - v_(phi.alt) (s_t)$ 对应 TD 估计；当 $lambda -> 1$ 时，$hat(A)_t^lambda (tau_m) -> sum_(k=0)^(m-t) gamma^k r_(t+k) - v_(phi.alt) (s_t)$ 对应 MC 估计（#Cre("TODO")：推导/理解（加权））。对 GAE 求期望有：
+回顾上节，值函数估计中我们引入 $"TD"(lambda)$ 目标实现 MC 和 TD 的综合，优势估计中自然也有类似的方案，即*广义优势估计*（generalized advantage estimation，GAE）：
 
 $
-&EE_(pi) [hat(A)_t^lambda (tau_m) mid(|) S_t = s_t, A_t = a_t] \
-=& (1-lambda)/(lambda-lambda^(m-t+1)) underbrace(sum_(n=1)^(m-t) lambda^n, (1-lambda^(m-t+1))/(1-lambda) - 1) (underbrace(EE_(pi) [y_t^n (tau_m) mid(|) s_t, a_t], Q^pi (s_t, a_t)", "forall n) - v_(phi.alt) (s_t)) \
+hat(A)_t^("GAE"(lambda),n) (tau_n) := (1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=1)^(n-t) lambda^k (y_t^k (tau_(t:t+k)) - v_(phi.alt) (s_t))
+$ <equ:gae_slides>
+
+课件中用的符号是 $G_t^lambda$，但我们之前用 $G$ 表示折扣回报了，故换成 $hat(A)$，更直白地说明它是对优势函数的估计。这里我们考虑的样本片段 $tau_n$ 到 $s_n$ 就结束的序列，所以求和索引 $k$ 的上限就到 $n-t$，确保 $y_t^k (tau_(t:t+k))$ 有定义；如果是无限样本长度（$n->infinity$）就都是 $infinity$ 了，可以直接省去上标中的 $n$。
+
+从公式角度#underline[直观看一下这个式子]，其实就是用多步目标计算的优势 $y_t^k (tau_(t:t+k)) - v_(phi.alt) (s_t)$ 用几何级数 $lambda^k$ 加权平均，前面是归一化系数。这和 $"TD"(lambda)$ 思路是完全一样的，只是一个在值函数估计里，一个在优势估计里。
+
+#blockquote([
+    *关于另一种常见的 GAE 定义及两种定义的关联性*：
+
+    在其他材料中 GAE 经常定义为：
+
+    $
+    hat(A)_t^("GAE"(lambda),n) (tau_n) := sum_(l=0)^(n-t-1) (gamma lambda)^l delta_(t+l), quad delta_t := r_t + gamma v_(phi.alt) (s_(t+1)) - v_(phi.alt) (s_t)
+    $ <equ:gae_pop>
+
+    这种写法是将 GAE 写成了 TD 优势 $delta_t$ 的加权和形式，形式上简洁一些。我们希望可以证明 @equ:gae_slides 和 @equ:gae_pop 里的两种定义是一致的，但先说结论：在无限长样本下确实如此，但*样本长度有限时二者并不等价*。
+    
+    先计算优势：
+
+    $
+    &y_t^k - v_(phi.alt) (s_t) \
+    
+    =& sum_(l=0)^(k-1) gamma^l r_(t+l) + gamma^k v_(phi.alt) (s_(t+k)) - v_(phi.alt) (s_t) \
+    
+    =& sum_(l=0)^(k-1) gamma^l r_(t+l) + gamma^k v_(phi.alt) (s_(t+k)) - v_(phi.alt) (s_t) 
+    + sum_(l=1)^(k-1) gamma^l v_(phi.alt) (s_(t+l)) - sum_(l=1)^(k-1) gamma^l v_(phi.alt) (s_(t+l)) \
+    
+    =& sum_(l=0)^(k-1) gamma^l r_(t+l) + sum_(l=1)^k gamma^l v_(phi.alt) (s_(t+l)) - sum_(l=0)^(k-1) gamma^l v_(phi.alt) (s_(t+l)) \
+    
+    =& sum_(l=0)^(k-1) gamma^l r_(t+l) + sum_(l=0)^(k-1) gamma^l dot gamma v_(phi.alt) (s_(t+l+1)) - sum_(l=0)^(k-1) gamma^l v_(phi.alt) (s_(t+l)) \
+    
+    =& sum_(l=0)^(k-1) gamma^l (r_(t+l) + gamma v_(phi.alt) (s_(t+l+1)) - v_(phi.alt) (s_(t+l))) \
+
+    =& sum_(l=0)^(k-1) gamma^l delta_(t+l)
+    $
+
+    代入 @equ:gae_slides 有：
+
+    $
+    &(1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=1)^(n-t) lambda^k (#Cbl($y_t^k - v_(phi.alt) (s_t)$)) \
+
+    =& (1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=1)^(n-t) lambda^k sum_(l=0)^(k-1) gamma^l delta_(t+l) \
+
+    =& (1-lambda)/(lambda-lambda^(n-t+1)) sum_(l=0)^(n-t-1) sum_(k=l+1)^(n-t) lambda^(k-l) lambda^l gamma^l delta_(t+l) \
+
+    =& sum_(l=0)^(n-t-1) (lambda gamma)^l delta_(t+l) dot (1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=l+1)^(n-t) lambda^(k-l) \
+
+    =& sum_(l=0)^(n-t-1) (lambda gamma)^l delta_(t+l) dot underbrace((1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=1)^(n-t-l) lambda^(k), C(l)) \
+    $
+
+    关键步骤就是交换了一下求和顺序，画一下 $k$-$l$ 平面内求和的三角形区域就行。不过#underline[结果很遗憾]，两种定义形式并非完全一致，而且 $C(l)$ 与 $l$ 相关，二者也不是简单的比例关系。但在 $n->infinity$ 时，由于有 $n-t-l = n-t+1 -> infinity$，系数 $C(l)$ 就等于 $1$ 了，即有：
+
+    $
+    hat(A)_t^("GAE"(lambda)) (tau_infinity) = sum_(l=0)^infinity (lambda gamma)^l delta_(t+l)
+    $ <equ:gae_inf_n_pop>
+
+    @equ:gae_slides 的定义更直观，而 @equ:gae_pop 实际上通常也是以 $n->infinity$ 的形式出现，之后我们主要以前者为主。
+])
+
+按照预期，我们可以验证#underline[在两个极端情况下 GAE 分别应该接近 TD 估计和 MC 估计]。当 $lambda -> 0$ 时：
+
+$
+lim_(lambda -> 0) hat(A)_t^("GAE"(lambda),n) (tau_n) &= y_t^1 (tau_n) - v_(phi.alt) (s_t) \
+&= r_t + gamma v_(phi.alt) (s_(t+1)) - v_(phi.alt) (s_t)
+$
+
+这就是 TD 估计，对应 @equ:td_advantage_loss。当 $lambda -> 1$ 时，应用洛必达法则：
+
+$
+lim_(lambda -> 1) hat(A)_t^("GAE"(lambda),n) (tau_n)
+&= lim_(lambda -> 1) (1-lambda)/(lambda-lambda^(n-t+1)) sum_(k=1)^(n-t) lambda^k (y_t^k (tau_(t:t+k)) - v_(phi.alt) (s_t)) \
+&= lim_(lambda -> 1) (dif/(dif lambda) [(1-lambda) sum_(k=1)^(n-t) lambda^(k-1) (y_t^k (tau_(t:t+k)) - v_(phi.alt) (s_t))])/(dif/(dif lambda) [1-lambda^(n-t)]) \
+&= 1/(n-t) sum_(k=1)^(n-t) (y_t^k - v_(phi.alt) (s_t))
+$
+
+或者直接从定义角度，$lambda->1$ 时权重都相同，所以就是求等权平均，直接写出系数得到结果。注意它*不等于* MC 估计，*但*当 $n->infinity$ 时它就收敛到 MC 估计，用 @equ:gae_inf_n_pop 推导比较方便：
+
+$
+hat(A)_t^("GAE"(1)) (tau_infinity) &= sum_(l=0)^infinity gamma^l delta_(t+l) \
+&= sum_(l=0)^infinity gamma^l (r_(t+l) + gamma v_(phi.alt) (s_(t+l+1)) - v_(phi.alt) (s_(t+l))) \
+&= sum_(l=0)^infinity gamma^l r_(t+l) + sum_(l=0)^infinity gamma^(l+1) v_(phi.alt) (s_(t+l+1)) - sum_(l=0)^infinity gamma^l v_(phi.alt) (s_(t+l)) \
+&= sum_(l=0)^infinity gamma^l r_(t+l) + sum_(l=1)^infinity gamma^l v_(phi.alt) (s_(t+l)) - sum_(l=0)^infinity gamma^l v_(phi.alt) (s_(t+l)) \
+&= g_t - v_(phi.alt) (s_t) \
+$
+
+此外，#underline[GAE 是优势函数的无偏估计]（在 $v_(phi.alt) (s_t)$ 准确的前提下），可以对 GAE 求期望验证：
+
+$
+&EE_(pi) [hat(A)_t^("GAE"(lambda),n) (tau_n) mid(|) S_t = s_t, A_t = a_t] \
+=& (1-lambda)/(lambda-lambda^(n-t+1)) underbrace(sum_(k=1)^(n-t) lambda^k, (1-lambda^(n-t+1))/(1-lambda) - 1) (underbrace(EE_(pi) [y_t^k (tau_n) mid(|) s_t, a_t], Q^pi (s_t, a_t)", "forall k) - v_(phi.alt) (s_t)) \
 =& Q^pi (s_t, a_t) - v_(phi.alt) (s_t) \
 =^!& A^pi (s_t, a_t)
 $
 
-即 GAE 是优势函数的无偏估计（在 $v_(phi.alt) (s_t)$ 估计无偏的前提下）。
-
-顺便注意，值函数估计和优势估计是分开的两件事，但确实在目标/估计选取上是对应的，性质也相似（收敛速度和方差）。
+总结一下，*无限时域* GAE 的两个极端情况分别退化到 TD 和 MC 估计，和上节值函数估计中的无限时域 $"TD"(lambda)$ 相互对应。
 
 === Asynchronous Advantage Actor-Critic (A3C)
 
-A3C 算法的核心在于 asynchronous，即异步。A3C 并行地运行多个环境，每个环境都是一个 A2C 在自己线程里获取和更新全局网络参数，互不干扰。
+A3C 算法的核心在于异步（asynchronous）。A3C 并行地运行多个环境，每个环境都是一个 A2C，在自己线程里获取和更新全局网络参数，环境之间互不干扰。
 
-异步避免了全局等待，可提高 CPU/GPU 利用率，并且由于多个环境并行，自然地产生多样化的数据，起到了一部分经验重放缓存的作用，即削弱非 i.i.d. 样本之间的相关性。
+异步避免了全局等待，可提高 CPU/GPU 利用率，并且由于多环境并行，按时间顺序自然地会产生多样化的数据，起到了一部分经验重放缓存的作用，即削弱非 i.i.d. 样本之间的相关性。
 
 === Convergence of Actor-Critic Methods
 
@@ -250,7 +342,7 @@ A3C 算法的核心在于 asynchronous，即异步。A3C 并行地运行多个�
 
 对于深度 Actor-Critic 方法没有特别的保证，但：
 + actor 和 critic 的相对学习率还是很重要。
-+ GAE 或 $"TD"(lambda)$ 必须 propagate future reward fast，即要快速将未来奖励的影响传递回来，对应的就是使用较大的 $lambda$，早点利用未来奖励的样本，而非慢慢等 $v_(phi.alt) (s)$ 等更新。
++ GAE 或 $"TD"(lambda)$ 必须 propagate future reward fast，即要快速将未来奖励的影响传递回来，对应的就是使用较大的 $lambda$（即偏向 MC），早点利用未来奖励的样本，而非慢慢等 $v_(phi.alt) (s)$ 等更新。
 
 === Continuous Control
 
@@ -274,7 +366,7 @@ $
 
 === Off-Policy Gradients
 
-前面提到过，Actor-Critic 等 on-policy 算法的典型问题在于样本利用率低，只能使用当前策略采样的样本进行更新。为了更好地说明这一点，我们试着直接推导 off-policy 梯度，即尝试使用来自另一个策略 $mu$ 的样本来更新当前策略 $pi_theta$。
+前面提到过，Actor-Critic 等 on-policy 算法的典型问题在于样本利用率低，只能使用当前策略采样的样本进行更新。为了更好地说明这一点，我们试着直接推导 off-policy 梯度，即#underline[尝试使用来自另一个策略 $mu$ 的样本来更新当前策略 $pi_theta$]。
 
 首先约定：
 + 行为策略 $mu (a mid(|) s)$ 满足 $(pi_theta (a mid(|) s))/(mu (a mid(|) s)) < infinity, forall a in cal(A), forall s in cal(S)$。
@@ -308,17 +400,18 @@ nabla_theta cal(L)_(pi_theta) [theta]
 &= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t underbrace(#Cbl($(R_t + gamma V^(pi_theta) (S_(t+1)) - V^(pi_theta) (S_t))$), A^(pi_theta) (S_t, R_t, S_(t+1))) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
 $
 
-这就是尝试用 $mu$ 的样本去更新 $pi_theta$ 的所谓 off-policy 梯度公式。假如现在就直接用这个式子尝试实现一个 Actor-Critic 架构的 off-policy 算法，$V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 近似；$(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 难算或者不知道，如果两种策略相近就可以近似为 $1$。于是损失函数梯度为：
+假如要用这个式子 $nabla_theta cal(L)_(pi_theta) [theta]$ 尝试实现一个 Actor-Critic 架构的 off-policy 算法，首先要将其中的 $V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 近似；然后 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 要么难算要么未知模型无法计算，就假设两种策略相近，直接近似为 $1$。由此得到近似的损失函数 $cal(L)_mu [theta]$ 及其梯度：
 
 $
-nabla_theta cal(L)_mu [theta] &approx -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
-&= -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t bold(A)_t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
-&approx nabla_theta cal(L)_(pi_theta) [theta]
+nabla_theta cal(L)_mu [theta] &approx -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (#Cbl($R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)$)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) #Cbl($hat(A)_t$)]
 $
 
-这个式子大致可以理解为从优势 $A^(pi_theta)_t$（加上标避免和动作 $A_t$ 混淆）中按系数 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling）。// TODO？实际实现中经常省略 $gamma^t$，直接使用 $-nabla_theta EE_mu [sum_(t=0)^(n-1) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) A^(pi_theta)_t]$，形式简洁。
+期望是 $EE_mu$，说明这里的优势估计 $hat(A)_t$（加标记避免和动作 $A_t$ 混淆）所用的样本 $(S_t, R_t, S_(t+1))$ 是从其他（旧）策略 $mu$ 采集的。于是这个式子可以理解为按策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling），从而通过实际来自 $mu$ 的优势估计 $hat(A)_t$ 计算假如它来自 $pi_theta$ 时会有的样子。
 
-在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
+当然，这里的优势估计除了这里的 TD 估计，也可以考虑换成之前讨论的 MC、GAE 等形式。
+
+// TODO？实际实现中经常省略 $gamma^t$，直接使用 $-nabla_theta EE_mu [sum_(t=0)^(n-1) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t]$，形式简洁。
 
 #blockquote([
     *关于重要性采样*：
@@ -326,28 +419,29 @@ $
     假设有一个函数 $f(X)$，我们希望求其在 $X ~ pi (dot)$ 分布上的期望，即：
 
     $
-    E_pi [f] = integral_x pi(x) f(x) dif x
+    EE_pi [f(X)] = integral_x pi(x) f(x) dif x
     $
 
     但假如现在我们无法直接从 $pi (x)$ 上进行采样，只能从另一个分布 $mu (x)$ 上采样（比如说样本已经是现成的来自 $mu$ 的样本，或者 $pi$ 太复杂等情况），那么我们就需要通过来自 $mu$ 的样本间接地获取 $pi$ 下的期望：
 
     $
-    E_pi [f] = integral_x pi(x) f(x) dif x = integral_x mu(x) pi(x)/mu(x) f(x) dif x = E_mu [pi(x)/mu(x) f(x)]
+    EE_pi [f(X)] = integral_x pi(x) f(x) dif x = integral_x mu(x) pi(x)/mu(x) f(x) dif x = EE_mu [pi(x)/mu(x) f(x)]
     $
 
     这样一来，用 $mu$ 上采集的样本，乘上一个重要性采样比 $pi(x)/mu(x)$ 再求期望就可以得到 $pi$ 上采集样本时的期望。
 ])
 
+在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
+
 === Trust-Region Policy Optimization (TRPO)
 
-TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-// 不稳定的原因归根结底还是在于刚刚直接直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项，实际上这个比值很不稳定。如若对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，即最好要求：
+表现不佳的原因首先是刚刚直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项实际上并不稳定。对策略 $pi_theta$ 的更新同时改变了状态分布 $xi_t^(pi_theta)$，而如果对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，所以最好要求：
 
 $
 xi_t^mu (s) >0, forall s in {s mid(|) xi_t^(pi_theta) (s) > 0} subset.eq cal(S)
 $
 
-若新策略较旧策略更新太多，上述情况出现概率就更大，且其他状态下的比值可能也会离 $1$ 比较远，从而导致训练不稳定。
+此外，重要性采样比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 也可能出现类似的问题，不一定满足之前关于其有界的约定。
 
 TRPO 算法的思想很粗暴，就是围绕旧行为策略 $mu = pi_(theta')$建立一个*信任域*（trust region），并要求反复使用这部分旧样本更新所得的新策略 $pi_theta$ 不允许超出这个信任域，于是问题变为带约束的优化问题：
 
@@ -382,13 +476,17 @@ $
 
 在 TRPO 上再进一步就是喜闻乐见，在实践中经常使用的*近端策略优化*（proximal policy optimization，PPO）算法了。
 
-如前所述，TRPO 的约束还是太复杂了，虽然可以二阶近似求解但还是有点麻烦，或许可以更简单一点。
+如前所述，TRPO 的约束还是太复杂了，虽然可以二阶近似求解但还是有点麻烦，或许可以更简单一点。考虑 $cal(L)_mu [theta]$ 中的策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$，我们尝试要求它只能卡（"clip"）到 $1 plus.minus epsilon.alt$ 的范围里，这样也能确保旧策略和新策略不要离太远，但比 KL 散度约束要更简单粗暴。具体地，采用如下和损失函数：
 
-// 回到 $cal(L)_mu [theta]$ 中的策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$，考虑直接将它卡（"clip"）到 $1 plus.minus epsilon.alt$ 的范围里，同样也能确保旧策略和新策略不要离太远，但比 KL 散度约束要更简单粗暴。
+$
+cal(L)_mu^"clip" [theta] := -EE_mu [sum_(t=0)^(n-1) gamma^t min{(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t, "clip"((pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)), 1-epsilon.alt, 1+epsilon.alt) hat(A)_t}]
+$
 
-具体地，
+观察式子，它其实是在截断和不截断所得两种 loss 中选择了较小的一个。考虑优势估计的符号，分类讨论一下会发现当策略比超出范围时，实际也#underline[只有两种情况会采用截断后的信号]：
++ $hat(A)_t > 0$ 且 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) > 1+epsilon.alt$ 时。
++ $hat(A)_t < 0$ 且 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) < 1-epsilon.alt$ 时。
 
-#Cre("TODO")
+这两种情况分别是 "动作好还想大幅提高该动作概率" 以及 "动作不好还想大幅度降低该动作概率"，换句话说就是#underline[只在 loss 会变好时截断以阻止过大幅度的策略改进]。那么截断能干什么？截断处就是把 loss 削平了，于是梯度也就为零，从而#underline[让这部分优势不参与参数更新]。
 
 与之前会不稳定的直接 off-policy 梯度更新法比较，PPO 随着样本重复使用次数提高显著加速训练，同时稳定性也不错，不过在动作集规模 $abs(cal(A))$ 较大时容易不稳定。
 
