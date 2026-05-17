@@ -160,7 +160,7 @@ $
 #blockquote([
     *关于 baseline 的选取与对方差的优化*：
 
-    此外，选值函数直观简单，但在 "最小化梯度方差" 这一目标下并非最优。#Cre("TODO")
+    此外，选值函数直观简单，但在 "最小化梯度方差" 这一目标下并非最优。#Cre("TODO") 到底怎么降低的方差。
     // https://www.zhihu.com/question/344367451/answer/813387514
 ])
 
@@ -192,7 +192,23 @@ $ <equ:ac_v_estimation_n_step_target>
 
 课件中括号里写的是 $tau_n$ 而非 $tau_(t:t+n)$，只表示了长度容易混淆，这里我们明确写出切片范围。这个 $tau_(l:r)$ 只是用来标注一下定义 $y_t^n$ 所需的变量，实际起点和长度取决于 $y_t^n$ 的上下标，#underline[简单起见]有时也会写包含所有信息的 $tau_infinity$，或者直接省略括号内的参数。
 
-直接计算可以得知对于任意 $n in NN$，#underline[多步目标的期望]都等于 $V^pi (s_t)$（#Cre("TODO")）。
+计算可以得知对于任意 $n in NN$，样本来自 $pi$ 的#underline[多步目标的期望]都等于 $V^pi (s_t)$：
+
+$
+EE_pi [y_t^n mid(|) s_t]
+
+&= EE_pi [sum_(k=0)^(n-1) gamma^k R_(t+k) + gamma^n v_(phi.alt) (S_(t+n)) mid(|) S_t = s_t] \
+
+&=^! EE_pi [sum_(k=0)^(n-1) gamma^k R_(t+k) + gamma^n V^pi (S_(t+n)) mid(|) S_t = s_t] \
+
+&= EE_pi [sum_(k=0)^(n-1) gamma^k R_(t+k) + gamma^n EE_pi [sum_(k=0)^infinity gamma^k R_(k+t+n) mid(|) S_(t+n), dots, S_t] mid(|) S_t = s_t] \
+
+&= EE_pi [sum_(k=0)^(n-1) gamma^k R_(t+k) + sum_(k=n)^infinity gamma^k R_(t+k) mid(|) S_t = s_t] \
+
+&= EE_pi [sum_(k=0)^infinity gamma^k R_(k+t) mid(|) S_t = s_t] \
+
+&= V^pi (s_t)
+$
 
 注意到当 $n=1$ 时，$y_t^1 (tau_infinity) := r_t + gamma v_(phi.alt) (s_(t+1))$ 就是常用的*时序差分*（temporal difference，TD）目标，特点是收敛慢（迭代次数多）而方差较小；当所用样本足够长时就是 *Monte-Carlo* 目标，特点是收敛快（迭代次数少）但方差较大：
 
@@ -224,7 +240,7 @@ $
 cal(L)''_(pi_theta) [theta] := -1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t ln pi_theta (a_t^i mid(|) s_t^i) [#Cbl($r_t^i + gamma v_(phi.alt) (s_(t+1)^i) - v_(phi.alt) (s_t^i)$)]
 $ <equ:td_advantage_loss>
 
-由于引入 bootstrapping，这个估计是#underline[有偏]的（#Cre("TODO") 证明），但因为单个样本短，能显著#underline[降低方差]。
+由于引入 bootstrapping，这个估计是#underline[有偏]的，但因为单个样本短，能显著#underline[降低方差]。
 
 回顾上节，值函数估计中我们引入 $"TD"(lambda)$ 目标实现 MC 和 TD 的综合，优势估计中自然也有类似的方案，即*广义优势估计*（generalized advantage estimation，GAE）：
 
@@ -356,7 +372,7 @@ $
 
 网络的输出则是 $m$ 个 head 用于 $bold(mu)_theta (s)$ 加上 $m$ 个 head 用于 $bold(sigma)_theta (s)$。
 
-简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），#Cre("TODO")，旨在鼓励一定程度的随机性探索，避免过早收敛到确定策略。关于这些内容，之后在 exploration 章节再详细说明。
+简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），旨在鼓励一定程度的随机性探索，避免过早收敛到确定策略。关于这些内容，之后在 exploration 章节再详细说明。
 
 === Conclusion
 
@@ -409,9 +425,7 @@ $
 
 期望是 $EE_mu$，说明这里的优势估计 $hat(A)_t$（加标记避免和动作 $A_t$ 混淆）所用的样本 $(S_t, R_t, S_(t+1))$ 是从其他（旧）策略 $mu$ 采集的。于是这个式子可以理解为按策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling），从而通过实际来自 $mu$ 的优势估计 $hat(A)_t$ 计算假如它来自 $pi_theta$ 时会有的样子。
 
-当然，这里的优势估计除了这里的 TD 估计，也可以考虑换成之前讨论的 MC、GAE 等形式。
-
-// TODO？实际实现中经常省略 $gamma^t$，直接使用 $-nabla_theta EE_mu [sum_(t=0)^(n-1) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t]$，形式简洁。
+当然，这里的优势估计除了这里的 TD 估计，也可以考虑换成之前讨论的 MC、GAE 等形式。实际实现中如果是基于零碎的状态转移样本进行训练（例如 TD 估计）还经常省略会 $gamma^t$，直接使用简洁的 $-nabla_theta EE [(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t]$，毕竟无所谓连续样本之间的关系了。
 
 #blockquote([
     *关于重要性采样*：

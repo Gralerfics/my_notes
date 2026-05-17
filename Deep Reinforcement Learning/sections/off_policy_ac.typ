@@ -6,7 +6,17 @@
 
 = Off-Policy Actor-Critic
 
+#Cre("TODO")
+
 == Deterministic Policy Gradients (DPG)
+
+#Cre("TODO")
+
+$
+nabla_theta cal(L)_(pi_theta) [theta]
+
+&approx "TODO" \
+$
 
 === Deep DPG (DDPG)
 
