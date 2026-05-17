@@ -372,7 +372,7 @@ $
 
 网络的输出则是 $m$ 个 head 用于 $bold(mu)_theta (s)$ 加上 $m$ 个 head 用于 $bold(sigma)_theta (s)$。
 
-简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），旨在鼓励一定程度的随机性探索，避免过早收敛到确定策略。关于这些内容，之后在 exploration 章节再详细说明。
+简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），#Cre("TODO")（具体），旨在鼓励一定程度的随机性探索，避免过早收敛到确定策略。关于这些内容，之后在 exploration 章节再详细说明。
 
 === Conclusion
 

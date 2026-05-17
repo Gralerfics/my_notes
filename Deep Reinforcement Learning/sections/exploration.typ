@@ -6,4 +6,6 @@
 
 = Exploration
 
+== Thompson Sampling
 
+== Optimistic Exploration
