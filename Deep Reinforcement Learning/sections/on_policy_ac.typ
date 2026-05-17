@@ -464,7 +464,7 @@ cal(L)_mu [theta] approx bold(g)^top (theta - theta_mu), quad
 D_"KL" [mu || pi_theta] approx 1/2 (theta - theta_mu)^top bold(H) (theta - theta_mu)
 $
 
-求解上述优化问题得解：
+求解上述优化问题得：
 
 $
 theta^* = theta_mu + alpha sqrt((2 delta)/(bold(g)^top bold(H)^(-1) bold(g))) bold(H)^(-1) bold(g)
@@ -494,4 +494,28 @@ $
 
 === Group Relative Policy Optimization (GRPO)
 
-#Cre("TODO")
+强化学习算法也可以用于大语言模型（large language model，LLM）的微调。对于一个预训练语言模型，可以将其推理视为一种预测下一个单词的强化学习策略：
+
+$
+pi_theta (a_t mid(|) s_0, a_0, dots, a_(t-1))
+$
+
+再加上信任域机制限制策略更新幅度以防其遗忘预训练知识，此外还需要训练一个奖励模型提供奖励函数，毕竟基本没法手动为这么大的状态空间设计奖励。如果采用 PPO 算法，critic 需要学习一个值函数估计 $v_(phi.alt) (s)$，但这东西将会需要和 LLM 规模相当的参数量，不现实，并且状态空间过大、维度过高很难保证泛化性能。
+
+考虑 Group Relative Policy Optimization（GRPO）算法，对于一次询问 $s_0$ 运行生成 $G$ 条不同轨迹 ${s_n^i}_(i=1)^G$，得到 $G$ 个最终奖励 $r(s_n^i)$。用这一整组奖励的均值替代 $v_(phi.alt) (s_0)$ 作为对值函数的估计：
+
+$
+nu(s_0) := 1/G sum_(i=1)^G r(s_n^i) approx V^(pi_theta) (s_0)
+$
+
+优势估计也改用 $nu(s)$ 和奖励来近似：
+
+$
+hat(A)_t^i
+:= underbrace(r_t^i, approx 0) + underbrace(gamma, 1) underbrace(v_(phi.alt) (s_(t+1)^i), approx r(s_n^i)) - underbrace(v_(phi.alt) (s_t^i), approx nu(s_0))
+approx (r(s_n^i) - nu(s_0))/"std"({r(s_n^i)}_(i=1)^G)
+$
+
+除以标准差保证尺度归一化。很粗暴的近似，直接表达最终奖励相对平均奖励的优势。
+
+GRPO 的表现取决于与任务的适配性，和 PPO 没有绝对的高下之分，不适合效果就可能很差。此外，通常较小的 $G$ 稳定性表现更优。
