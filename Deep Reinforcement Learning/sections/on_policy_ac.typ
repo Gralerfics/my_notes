@@ -15,6 +15,36 @@
   caption: [策略梯度类算法谱图（来自 TU Delft 课件）]
 ) <fig:policy_opt_spectrum>
 
+== Parameterized Stochastic Policies
+
+我们采用的策略是*随机策略*（stochastic policy），即参数化的是一个概率分布，而不同于 DQN 中直接通过参数化价值函数确定（deterministic）的策略。原因在于，下节中会推导策略梯度定理，其中#underline[涉及（对数）策略分布的梯度]，如果采用确定策略就意味着策略分布退化为 $delta$ 分布，梯度的质量也就会很一般。下个章节的 DDPG、TD3 等算法会基于确定策略展开。
+
+常用的随机策略分布通常也就那几种，离散动作的情况下多采用 *Softmax 策略*：
+
+$
+pi_theta (a mid(|) s) = (exp(z_theta (s, a)))/(sum_(a') exp(z_theta (s, a')))
+$
+
+非常常见，分布的结构固定后其中的分布参数 $z_theta$ 等可以再用其他模型（如神经网络）进行参数化。Softmax 策略对应的对数梯度为：
+
+$
+nabla_theta ln pi_theta (a mid(|) s)
+&= nabla_theta [z_theta (s, a) - ln sum_(a') exp(z_theta (s, a'))] \
+&= nabla_theta z_theta (s, a) - (sum_(a') exp(z_theta (s, a')) nabla_theta z_theta (s, a'))/(sum_(a') exp(z_theta (s, a'))) \
+&= nabla_theta z_theta (s, a) - sum_(a') pi_theta (a' mid(|) s) nabla_theta z_theta (s, a')
+$
+
+也就是动作 $a$ 的策略梯度减去所有动作策略梯度按策略分布加权的平均值。
+
+对于连续动作空间则常采用*高斯策略*，设动作维度为 $d$：
+
+$
+pi_theta (a mid(|) s) &= cal(N) (mu_theta (s), Sigma_theta (s)) \
+&= 1/((2 pi)^(d\/2) abs(Sigma_theta (s))^(1\/2)) exp(-1/2 (a - mu_theta (s))^top Sigma_theta^(-1) (s) (a - mu_theta (s)))
+$
+
+对应的对数梯度推导略（#Cre("TODO")）。
+
 == Policy Gradient Theorem
 
 对于随机轨迹 $Tau = {S_0, A_0, R_0, S_1, dots, R_(n-1), S_n}$，我们之前定义过整条轨迹的折扣回报 @equ:discounted_return，这里我们再定义从某个指定时刻 $t$ 作为起点的折扣回报：
@@ -64,7 +94,7 @@ $
 $
 G_0 := sum_(k=0)^infinity gamma^k R_k
 &= sum_(k=0)^(t-1) gamma^k R_k + sum_(k=t)^infinity gamma^k R_k \
-&= sum_(k=0)^(t-1) gamma^k R_k + gamma^t sum_(k=0)^infinity gamma^k R_(k+t) \
+&= sum_(k=0)^(t-1) gamma^k R_k + gamma^t underbrace(sum_(k=0)^infinity gamma^k R_(k+t), G_t) \
 &=: C_t + gamma^t G_t
 $
 
@@ -93,7 +123,7 @@ EE_(A_t ~ pi_theta (dot mid(|) S_t)) [nabla_theta ln pi_theta (A_t mid(|) S_t) m
 &= sum_(a_t) pi_theta (a_t mid(|) S_t) nabla_theta ln pi_theta (a_t mid(|) S_t) \
 &= nabla_theta sum_(a_t) pi_theta (a_t mid(|) S_t) \
 &= 0
-$
+$ <equ:EE_At_Nabla_theta_ln_pi_theta_A_S_H_zero>
 
 于是总期望回报式中关于 $C_t$ 的项为 $0$，最终有：
 
@@ -113,7 +143,7 @@ nabla_theta cal(L)_(pi_theta) [theta]
 &approx nabla_theta [-1/m sum_(i=1)^m sum_(t=0)^(n-1) gamma^t g_t^i ln pi_theta (a_t^i mid(|) s_t^i)]
 $
 
-REINFORCE 是典型的 on-policy 策略梯度算法，直接使用当前策略采样并更新，策略用概率分布表示，是*随机策略*（stochastic policy）。其#underline[简单直接，不需要估计价值函数]，缺点则是#underline[样本利用效率低（朴素 on-policy 算法的通病，策略更新后旧样本不再能使用），估计方差较大（见后）]。
+REINFORCE 是典型的 on-policy 策略梯度算法，直接使用当前策略采样并更新，策略用概率分布表示，是随机策略。其#underline[简单直接，不需要估计价值函数]，缺点则是#underline[样本利用效率低（朴素 on-policy 算法的通病，策略更新后旧样本不再能使用），估计方差较大（见后）]。
 
 如 @fig:policy_opt_spectrum 所示，之前的 DQN 是与其相对的另一个极端 off-policy value-based 算法，完全依赖动作值函数估计，策略是通过最大化动作值函数得到的*确定策略*（deterministic policy）。由于可以复用，样本利用率高，但是在很难学出一个泛化性优秀的价值函数时就容易不稳定。
 
@@ -147,11 +177,11 @@ $
 =& sum_(t=0)^infinity gamma^t EE_(H_t) [b (H_t) #Cbl($EE_(A_t ~ pi_theta (dot mid(|) S_t))[nabla_theta ln pi_theta (A_t mid(|) S_t) mid(|) H_t]$)] \
 
 =& 0
-$
+$ <equ:baseline_v_deri>
 
-这里第一步将无限时域求和提到期望外面，严格来说需要满足一些有界性条件，在我们的问题假设下（例如奖励有界、折扣因子等）基本都成立，此处省略。该项为零也就说明在 $G_t$ 上减去任意仅和 $H_t$ 有关的 baseline 都不破坏估计的无偏性。
+这里第一步将无限时域求和提到期望外面，严格来说需要满足一些有界性条件，在我们的问题假设下（例如奖励有界、折扣因子等）基本都成立，此处省略。第二步是#underline[条件期望分解]，$EE_(pi_theta)$ 简写的随机变量是整条轨迹，由于期望内部不涉及 $S_t$、$A_t$ 以后的随机变量，可以将它们舍去，剩下的就可以分解为 $H_t$（到 $S_t$ 为止的轨迹）和 $A_t$ 两层。最后为零的项来自 @equ:EE_At_Nabla_theta_ln_pi_theta_A_S_H_zero。
 
-我们通常#underline[选取值函数估计] $V^(pi_theta) (S_t)$ 当 baseline，它仅和当前状态 $S_t$ 有关，符合条件。选择值函数作为 baseline 是符合直觉的，$G_t - V^(pi_theta) (S_t)$ 可以解读为#underline[在该状态下采取某动作所得回报比 "平均情况下在该状态所得回报" 好多少]，相当于做了一个归一化。这个对 "好多少" 的衡量也被称为*优势*（advantage），对应*优势函数*（advantage function）：
+该式为零也就说明在 $G_t$ 上减去任意仅和 $H_t$ 有关的 baseline 都不破坏估计的无偏性。我们通常#underline[选取值函数估计] $V^(pi_theta) (S_t)$ 当 baseline，它仅和当前状态 $S_t$ 有关，符合条件。选择值函数作为 baseline 是符合直觉的，$G_t - V^(pi_theta) (S_t)$ 可以解读为#underline[在该状态下采取某动作所得回报比 "平均情况下在该状态所得回报" 好多少]，相当于做了一个归一化。这个对 "好多少" 的衡量也被称为*优势*（advantage），对应*优势函数*（advantage function）：
 
 $
 A^pi (s, a) := Q^pi (s, a) - V^pi (s)
@@ -222,7 +252,7 @@ $
 y_t^("TD"(lambda)) (tau_infinity) := (1-lambda) sum_(k=0)^infinity lambda^k y_t^(k+1) (tau_infinity)
 $
 
-其中 $1-lambda$ 是归一化因子，用以确保 $sum_(k=0)^infinity lambda^k = 1/(1-lambda)$ 乘上它后能将权重和化为 $1$。$lambda$ 较小时级数衰减较快，较长的多步目标权重就低，对应地就偏向短期目标。可以验证，$lambda -> 0$ 时它就是 TD 目标 $y_t^1$，$lambda -> 1$ 时它就是 Monte-Carlo 目标 $y_t^"MC"$。
+其中 $1-lambda$ 是归一化因子，用以确保 $sum_(k=0)^infinity lambda^k = 1/(1-lambda)$ 乘上它后能将权重和化为 $1$。$lambda$ 较小时级数衰减较快，较长的多步目标权重就低，对应地就偏向短期目标。可以验证，$lambda -> 0$ 时它就是 TD 目标 $y_t^1$，$lambda -> 1$ 时它就是 Monte-Carlo 目标 $y_t^"MC"$（#Cre("TODO")）。
 
 === Advantage Actor-Critic (A2C)
 
@@ -372,7 +402,23 @@ $
 
 网络的输出则是 $m$ 个 head 用于 $bold(mu)_theta (s)$ 加上 $m$ 个 head 用于 $bold(sigma)_theta (s)$。
 
-简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），#Cre("TODO")（具体），旨在鼓励一定程度的随机性探索，避免过早收敛到确定策略。关于这些内容，之后在 exploration 章节再详细说明。
+简单情况下，探索采样时可以直接从该策略分布中采样。参数更新时可应用*最大熵正则化*（maximum entropy regularization），定义熵：
+
+$
+cal(H) [pi_theta] := -1/n sum_(t=0)^(n-1) integral pi_theta (bold(a) mid(|) s_t) ln pi_theta (bold(a) mid(|) s_t) dif bold(a)
+$ <equ:maximum_entropy_reg_entropy>
+
+其表达了策略 $pi_theta$ 在整条轨迹上的平均随机程度。在损失函数中加入正则项：
+
+$
+macron(cal(L)) [theta] := cal(L) [theta] - 1/beta cal(H) [pi_theta], quad beta > 0
+$
+
+最小化该损失函数时也会一定程度上最大化这个熵，从而使得最优化出来的策略仍然具有随机性。在 on-policy 算法中，采样所用的行为策略就是目标策略。最大熵保持了目标策略的一定随机性，也就鼓励了探索的随机性，避免过早收敛到确定策略，导致错过一些状态空间。顺便给出正则项的梯度：
+
+$
+nabla_theta cal(H) [pi_theta] = -1/n sum_(t=0)^(n-1) integral pi_theta (bold(a) mid(|) s_t) ln pi_theta (bold(a) mid(|) s_t) nabla_theta ln pi_theta (bold(a) mid(|) s_t) dif bold(a)
+$
 
 === Conclusion
 
@@ -388,44 +434,80 @@ $
 + 行为策略 $mu (a mid(|) s)$ 满足 $(pi_theta (a mid(|) s))/(mu (a mid(|) s)) < infinity, forall a in cal(A), forall s in cal(S)$。
 + $xi_t^(pi_theta) (s)$ 表示采用策略 $pi_theta$ 执行 $t$ 步后状态 $s$ 的分布。
 
-于是之前 REINFORCE 的损失函数梯度可以进一步化为：
+// #Cre("TODO ！！！！！这里的 pi 有问题，有些地方似乎不是用 pi_theta 而是固定为 pi")
+
+由此之前 REINFORCE 的损失函数梯度可以进一步变化：
 
 $
 nabla_theta cal(L)_(pi_theta) [theta]
 
 &= -EE_(pi_theta) [sum_(t=0)^infinity gamma^t G_t #Cgr($nabla_theta ln pi_theta (A_t mid(|) S_t)$)] \
 
-&= -integral xi_t^(pi_theta) (s_t) integral pi_theta (a_t mid(|) s_t) sum_(t=0)^(n-1) gamma^t #Cbl($EE_(pi_theta) [G_t mid(|) s_t, a_t]$) #Cgr($(nabla_theta pi_theta (a_t mid(|) s_t)) / (pi_theta (a_t mid(|) s_t))$) dif a_t dif s_t \
+&= -EE_(pi_theta) [sum_(t=0)^infinity gamma^t EE_(pi_theta) [G_t mid(|) S_t, A_t] #Cgr($nabla_theta ln pi_theta (A_t mid(|) S_t)$)] quad "(Tower property)" \
 
-&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral cancel(pi_theta (a_t mid(|) s_t)) gamma^t #Cbl($Q^(pi_theta) (s_t, a_t)$) (nabla_theta pi_theta (a_t mid(|) s_t)) / cancel(pi_theta (a_t mid(|) s_t)) dif a_t dif s_t \
+&= -integral xi_t^(pi_theta) (s_t) integral cancel(pi_theta (a_t mid(|) s_t)) sum_(t=0)^(n-1) gamma^t #Cbl($EE_(pi_theta) [G_t mid(|) s_t, a_t]$) #Cgr($(nabla_theta pi_theta (a_t mid(|) s_t)) / cancel(pi_theta (a_t mid(|) s_t))$) dif a_t dif s_t \
 
-&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral #Cpu($mu (a_t mid(|) s_t)$) gamma^t Q^(pi_theta) (s_t, a_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / (#Cpu($mu (a_t mid(|) s_t)$)) dif a_t dif s_t \
+&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral gamma^t #Cbl($Q^(pi_theta) (s_t, a_t)$) nabla_theta pi_theta (a_t mid(|) s_t) dif a_t dif s_t \
+
+&= -sum_(t=0)^(n-1) integral xi_t^(pi_theta) (s_t) integral #Cpu($mu (a_t mid(|) s_t)$) gamma^t Q^(pi_theta) (s_t, a_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / (#Cpu($mu (a_t mid(|) s_t)$)) dif a_t dif s_t
 $
 
-这里把期望展开成积分形式和求和形式只是连续和离散的区别，意思差不多。接下来写成采用策略 $mu$ 的轨迹的期望形式（即 $EE_mu [dot] := EE_(Tau~p_Tau^mu (dot)) [dot]$，与 $EE_pi$ 对应）：
+这里把期望展开成积分形式和求和形式只是连续和离散的区别，意思差不多。其中 $Q^(pi_theta)$ 来自和之前值函数类似的时移性质（@equ:vfunc_time_shift_prop）：
+
+$
+EE_(pi_theta) [G_t mid(|) s_t, a_t]
+&= EE_(pi_theta) [sum_(k=0)^infinity gamma^k R_(k+t) mid(|) S_t = s_t, A_t = a_t] \
+&= EE_(pi_theta) [sum_(k=0)^infinity gamma^k R_k mid(|) S_0 = s_t, A_0 = a_t] \
+&=: Q^(pi_theta) (s_t, a_t)
+$
+
+接下来写成采用策略 $mu$ 的轨迹的期望形式（即 $EE_mu [dot] := EE_(Tau~p_Tau^mu (dot)) [dot]$，与 $EE_pi$ 对应）：
 
 $
 nabla_theta cal(L)_(pi_theta) [theta]
 
 &= -sum_(t=0)^(n-1) integral xi_t^mu (s_t) (xi_t^(pi_theta) (s_t))/(xi_t^mu (s_t)) integral mu (a_t mid(|) s_t) gamma^t Q^(pi_theta) (s_t, a_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / (mu (a_t mid(|) s_t)) dif a_t dif s_t \
 
-&= -EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t Q^(pi_theta) (S_t, A_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
-
-&= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t #Cbl($Q^(pi_theta) (S_t, A_t)$) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
-
-&= -nabla_theta EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t underbrace(#Cbl($(R_t + gamma V^(pi_theta) (S_(t+1)) - V^(pi_theta) (S_t))$), A^(pi_theta) (S_t, R_t, S_(t+1))) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+&= -EE_mu [sum_(t=0)^(n-1) (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t)) gamma^t Q^(pi_theta) (S_t, A_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))]
 $
 
-假如要用这个式子 $nabla_theta cal(L)_(pi_theta) [theta]$ 尝试实现一个 Actor-Critic 架构的 off-policy 算法，首先要将其中的 $V^(pi_theta) (s)$ 用估计的 $v_(phi.alt) (s)$ 近似；然后 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 要么难算要么未知模型无法计算，就假设两种策略相近，直接近似为 $1$。由此得到近似的损失函数 $cal(L)_mu [theta]$ 及其梯度：
+接下来要作一些*近似*以便推出可用的形式（#Cre("TODO")），考虑只更新策略分布 $pi_theta (dot)$，其他例如 $xi^(pi_theta) (dot)$、$Q^(pi_theta) (dot)$、$V^(pi_theta) (dot)$ 都视作与参数 $theta$ 无关的常数，或者说 `detach` 阻断其对梯度的贡献，记为 $xi^pi (dot)$ 等。顺便记 $eta_t (S_t) := (xi_t^#Cbl($pi$) (S_t))/(xi_t^mu (S_t))$，有：
 
 $
-nabla_theta cal(L)_mu [theta] &approx -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (#Cbl($R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)$)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
-&= -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) #Cbl($hat(A)_t$)]
+nabla_theta cal(L)_(pi_theta) [theta]
+
+&= -EE_mu [sum_(t=0)^(n-1) eta_t (S_t) gamma^t Q^#Cbl($pi$) (S_t, A_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+&=^(*) -EE_mu [sum_(t=0)^(n-1) eta_t (S_t) gamma^t (Q^pi (S_t, A_t) - V^pi (S_t)) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) eta_t (S_t) gamma^t (Q^pi (S_t, A_t) - V^pi (S_t)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+// &= -nabla_theta EE_mu [sum_(t=0)^(n-1) eta_t (S_t) gamma^t underbrace(#Cbl($(R_t + gamma V^pi (S_(t+1)) - V^pi (S_t))$), A^pi (S_t, R_t, S_(t+1))) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))]
 $
 
-期望是 $EE_mu$，说明这里的优势估计 $hat(A)_t$（加标记避免和动作 $A_t$ 混淆）所用的样本 $(S_t, R_t, S_(t+1))$ 是从其他（旧）策略 $mu$ 采集的。于是这个式子可以理解为按策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling），从而通过实际来自 $mu$ 的优势估计 $hat(A)_t$ 计算假如它来自 $pi_theta$ 时会有的样子。
+其中 $*$ 式的导出参考 @equ:baseline_v_deri 中减去 baseline 不影响期望的推导，具体地：
 
-当然，这里的优势估计除了这里的 TD 估计，也可以考虑换成之前讨论的 MC、GAE 等形式。实际实现中如果是基于零碎的状态转移样本进行训练（例如 TD 估计）还经常省略会 $gamma^t$，直接使用简洁的 $-nabla_theta EE [(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t]$，毕竟无所谓连续样本之间的关系了。
+$
+&EE_mu [sum_(t=0)^(n-1) eta_t (S_t) gamma^t V^pi (S_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+=& sum_(t=0)^(n-1) gamma^t EE_mu [eta_t (S_t) V^pi (S_t) (nabla_theta pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+
+=& sum_(t=0)^(n-1) gamma^t integral_(s_t) xi_t^mu (s_t) integral_(a_t) cancel(mu (a_t mid(|) s_t)) eta_t (s_t) V^pi (s_t) (nabla_theta pi_theta (a_t mid(|) s_t)) / cancel(mu (a_t mid(|) s_t)) dif a_t dif s_t \
+
+=& sum_(t=0)^(n-1) gamma^t integral_(s_t) xi_t^mu (s_t) eta_t (s_t) V^pi (s_t) underbrace(integral_(a_t) nabla_theta pi_theta (a_t mid(|) s_t) dif a_t, 0) dif s_t \
+
+=& 0
+$
+
+按定义 $Q^pi (S_t, A_t) - V^pi (S_t)$ 即优势函数 $A^pi (S_t, A_t)$，此外 $eta_t (S_t) := (xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 要么难算要么未知模型无法计算，就假设两种策略相近，近似为 $1$。最终梯度式化为：
+
+$
+nabla_theta cal(L)_(pi_theta) [theta]
+
+approx -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) A^pi (S_t, A_t)]
+$ <equ:off_policy_gradient_grad_advantage>
+
+这个式子可以理解为按策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 进行*重要性采样*（importance sampling），从而通过实际来自 $mu$ 的优势估计 $hat(A)_t$ 计算假如它来自 $pi_theta$ 时会有的样子。
 
 #blockquote([
     *关于重要性采样*：
@@ -445,25 +527,42 @@ $
     这样一来，用 $mu$ 上采集的样本，乘上一个重要性采样比 $pi(x)/mu(x)$ 再求期望就可以得到 $pi$ 上采集样本时的期望。
 ])
 
-在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。具体地，每次使用当前策略采样获得一系列样本，用这些样本多次学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
+如果要用这个 $nabla_theta cal(L)_(pi_theta) [theta]$ 尝试实现一个 Actor-Critic 架构的 off-policy 算法，主要要考虑如何去估计这个优势函数。记优势估计为 $hat(A)_t$（加标记避免和动作 $A_t$ 混淆），一种方式是做类似 Q-Learning 的一步 TD 估计，由：
+
+$
+Q^pi (S_t, A_t) = EE_mu [R_t + gamma V^pi (S_(t+1)) mid(|) S_t, A_t]
+$
+
+将 $V^pi (s)$ 用估计的 $v_(phi.alt) (s)$ 代替，由此得到：
+
+$
+nabla_theta cal(L)_mu [theta] &approx -nabla_theta EE_mu [sum_(t=0)^(n-1)  gamma^t (#Cbl($R_t + gamma v_(phi.alt) (S_(t+1)) - v_(phi.alt) (S_t)$)) (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))] \
+&= -nabla_theta EE_mu [sum_(t=0)^(n-1) gamma^t (pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) #Cbl($hat(A)_t$)]
+$
+
+当然，这里的优势估计除了这里的 TD 估计，也可以考虑换成之前讨论的 MC、GAE 等形式。实际实现中如果是基于零碎的状态转移样本进行训练（例如 TD 估计）还经常省略会 $gamma^t$，直接使用简洁的 $-nabla_theta EE [(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t)) hat(A)_t]$，毕竟无所谓连续样本之间的关系了。
+
+在此基础上，我们就可以去#underline[复用旧策略 $mu$ 采样的样本]了，从而#underline[提高样本利用率，加快训练速度]。*具体地*，每次都使用当前策略采样获得一系列样本，然后用这些样本#underline[多次]学习更新得到新策略，如此往复。但若实际尝试，则会发现#underline[样本重复使用次数（repetitions）多了训练就容易不稳定]。
 
 === Trust-Region Policy Optimization (TRPO)
 
-表现不佳的原因首先是刚刚直接近似为 $1$ 的 $(xi_t^(pi_theta) (S_t))/(xi_t^mu (S_t))$ 项实际上并不稳定。对策略 $pi_theta$ 的更新同时改变了状态分布 $xi_t^(pi_theta)$，而如果对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么这个比值就会趋于无穷，反之趋于 $0$，所以最好要求：
+表现不佳的原因首先是刚刚直接近似为 $1$ 的 $(xi_t^pi (S_t))/(xi_t^mu (S_t))$ 项以及重要性采样比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 容易数值不稳定。例如，对策略 $pi_theta$ 的更新同时改变了状态分布 $xi_t^pi$，而如果对某个状态 $s_t$，新策略会有可能采样到而旧策略不会采样到，那么比值就会趋于无穷，反之趋于 $0$ 等。
 
-$
-xi_t^mu (s) >0, forall s in {s mid(|) xi_t^(pi_theta) (s) > 0} subset.eq cal(S)
-$
+// 所以最好要求：
 
-此外，重要性采样比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$ 也可能出现类似的问题，不一定满足之前关于其有界的约定。
+// $
+// xi_t^mu (s) >0, forall s in {s mid(|) xi_t^(pi_theta) (s) > 0} subset.eq cal(S)
+// $
 
-TRPO 算法的思想很粗暴，就是围绕旧行为策略 $mu = pi_(theta')$建立一个*信任域*（trust region），并要求反复使用这部分旧样本更新所得的新策略 $pi_theta$ 不允许超出这个信任域，于是问题变为带约束的优化问题：
+// 此外，重要性采样比也可能出现类似的问题，不一定满足之前关于其有界的约定。
+
+TRPO 算法的思想很直接，就是围绕旧行为策略 $mu = pi_(theta')$建立一个*信赖域*（trust region），并要求反复使用这部分旧样本更新所得的新策略 $pi_theta$ 不允许超出这个信赖域，于是问题变为带约束的优化问题：
 
 $
 min_theta cal(L)_mu [theta] quad "s.t." quad EE_mu [sum_(t=0)^(n-1) D_"KL" [mu (dot mid(|) S_t) || pi_theta (dot mid(|) S_t)]] <= delta
 $
 
-信任域衡量的是分布之间的 "距离"，所以直接使用了 KL 散度（Kullback-Leibler divergence）的概念，它衡量的是用一个近似概率分布 $q$ 来描述真实分布 $p$ 时所引入的信息损失：
+信赖域衡量的是分布之间的 "距离"，所以直接使用了 KL 散度（Kullback-Leibler divergence）的概念，它衡量的是用一个近似概率分布 $q$ 来描述真实分布 $p$ 时所引入的信息损失：
 
 $
 D_"KL" (p || q) := integral_(-infinity)^infinity p(x) log (p(x))/(q(x)) dif x
@@ -488,7 +587,7 @@ $
 
 === Proximal Policy Optimization (PPO)
 
-在 TRPO 上再进一步就是喜闻乐见，在实践中经常使用的*近端策略优化*（proximal policy optimization，PPO）算法了。
+在 TRPO 上再稍加修改就是经常使用的*近端策略优化*（proximal policy optimization，PPO）算法了。
 
 如前所述，TRPO 的约束还是太复杂了，虽然可以二阶近似求解但还是有点麻烦，或许可以更简单一点。考虑 $cal(L)_mu [theta]$ 中的策略比 $(pi_theta (A_t mid(|) S_t)) / (mu (A_t mid(|) S_t))$，我们尝试要求它只能卡（"clip"）到 $1 plus.minus epsilon.alt$ 的范围里，这样也能确保旧策略和新策略不要离太远，但比 KL 散度约束要更简单粗暴。具体地，采用如下和损失函数：
 
@@ -506,6 +605,16 @@ $
 
 回到谱图 @fig:policy_opt_spectrum，TRPO/PPO 算法依旧是#underline[随机策略]、#underline[采用 Actor-Critic 架构估计值函数]的算法。此外章节初提到过，TRPO/PPO 虽然涉及样本复用，但我们还是将其划分为 on-policy 算法；图中的划分方式倒也可以理解，因为基本的损失函数 $cal(L)_mu [theta]$ 确实是基于 off-policy 思想推导的，所以称为 "off-policy loss"，只不过 TRPO/PPO 在新旧策略分布上做了一些约束以确保没有 "off" 得太远。
 
+#blockquote([
+    *关于算法原理与工程实现的距离*：
+
+    TRPO 到 PPO 表现的提升大多不是这些算法层面的裁剪带来的，实际上主要依靠 PPO 实现中的一系列工程技巧。毕竟从原理层面上来说，PPO 只是为了降低复杂度实现的对 TRPO 的近似，按理说效果应该
+
+    具体可以查看一篇 Implementation Matters in Deep Policy Gradients: A Case Study on PPO and TRPO（https://arxiv.org/pdf/2005.12729），其中分析了 PPO 标准实现中应用的一系列技巧并做了详细的消融实验。如果将这些技巧应用到 TRPO 上，在某些任务上其性能也可能超越 PPO。还有 https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/。
+
+    不止 PPO，绝大部分算法实践中的优秀效果都离不开大量工程技巧的应用，完全按算法朴素地实现通常效果不会太好。
+])
+
 === Group Relative Policy Optimization (GRPO)
 
 强化学习算法也可以用于大语言模型（large language model，LLM）的微调。对于一个预训练语言模型，可以将其推理视为一种预测下一个单词的强化学习策略：
@@ -514,7 +623,7 @@ $
 pi_theta (a_t mid(|) s_0, a_0, dots, a_(t-1))
 $
 
-再加上信任域机制限制策略更新幅度以防其遗忘预训练知识，此外还需要训练一个奖励模型提供奖励函数，毕竟基本没法手动为这么大的状态空间设计奖励。如果采用 PPO 算法，critic 需要学习一个值函数估计 $v_(phi.alt) (s)$，但这东西将会需要和 LLM 规模相当的参数量，不现实，并且状态空间过大、维度过高很难保证泛化性能。
+再加上信赖域机制限制策略更新幅度以防其遗忘预训练知识，此外还需要训练一个奖励模型提供奖励函数，毕竟基本没法手动为这么大的状态空间设计奖励。如果采用 PPO 算法，critic 需要学习一个值函数估计 $v_(phi.alt) (s)$，但这东西将会需要和 LLM 规模相当的参数量，不现实，并且状态空间过大、维度过高很难保证泛化性能。
 
 考虑 Group Relative Policy Optimization（GRPO）算法，对于一次询问 $s_0$ 运行生成 $G$ 条不同轨迹 ${s_n^i}_(i=1)^G$，得到 $G$ 个最终奖励 $r(s_n^i)$。用这一整组奖励的均值替代 $v_(phi.alt) (s_0)$ 作为对值函数的估计：
 

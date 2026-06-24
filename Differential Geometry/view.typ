@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Differential Geometry],
+    title: [Notes of Vision-Language-Action Model],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
@@ -30,6 +30,18 @@
     // figure-index: (enabled: true),
     // table-index: (enabled: true),
     // listing-index: (enabled: true),
+)
+
+#show raw: set text(
+    font: "DejaVu Sans Mono",
+    size: 0.9em
+)
+
+#show raw: it => box(
+    fill: none,
+    inset: 1pt,
+    radius: 0pt,
+    it
 )
 
 #include "main.typ"

@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Differential Geometry],
+    title: [Notes of Data Compression: Entropy and Sparsity Perspective],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),

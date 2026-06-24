@@ -267,7 +267,13 @@ $
 
 == A Tutorial on Linear Matrix Inequalities (LMIs) and Semi-Definite Programming (SDP)
 
+TODO
+
 == NCS With Packet Losses
+
+TODO 在到 controller 和传回输入之间插入 $m_k$，为 $1$ 表示发生了 packet loss。
+
+TODO 如果某时刻发生了 packet loss，控制指令的处理可以选择 hold（保持上一次的 $u_k$）或 zero（置零）策略。
 
 == NCS With Communication Constraints (Protocols)
 

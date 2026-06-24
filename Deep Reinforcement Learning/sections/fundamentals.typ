@@ -353,7 +353,7 @@ $ <equ:q_bellman_expectation>
 
   这里的证明思路和 @equ:qv_relation 的证明思路基本一致，大致都是#underline[引入下一时刻的随机变量以形成递推的结构]。
   
-  有了前面的证明，对于#underline[动作值函数的版本]只需将 @equ:vq_relation 代入 @equ:qv_relation 即可得到 @equ:q_bellman_expectation。
+  其实不止是思路一致了，基于之前的证明完全可以直接将 @equ:qv_relation 代入 @equ:vq_relation 得到 @equ:v_bellman_expectation、将 @equ:vq_relation 代入 @equ:qv_relation 得到 @equ:q_bellman_expectation，这里就当提供一个一体的版本。
 ])
 
 == Optimal Bellman Equations
@@ -426,7 +426,7 @@ Q^* (s, a) &= r(s, a) + gamma EE_(S'~P(dot mid(|) s, a)) [max_(a') Q^* (S', a')]
 &= r(s, a) + gamma sum_(s') P(s' mid(|) s, a) max_(a') Q^* (s', a')
 $ <equ:q_bellman_optimal>
 
-课件中#underline[考虑状态可微的情况]，则有最优 Q 值（optimal Q-values）：
+或者写成积分形式，意思都一样，只是连续和离散的区别：
 
 $
 Q^* (s, a) = r(s, a) + gamma integral P(s' mid(|) s, a) max_(a') Q^* (s', a') dif s'
