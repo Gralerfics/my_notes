@@ -403,7 +403,7 @@ self.target_model_update()
 + 增加重放缓存大小；
 + 提高随机探索概率 $epsilon.alt$ 的最终下限等。
 
-=== Reason For Using "Deep" Learning
+=== Why "Deep" Learning
 
 #Cre("TODO")
 
@@ -411,15 +411,45 @@ self.target_model_update()
 
 #Cre("TODO")
 RL software architecture,
-Double Q-learning (\*),
-Dueling network architectures,
+// Double Q-Learning (\*),
+// Dueling network architectures,
 Trust-region online bootstrapping,
 Distributional Q-learning,
 Modern DQN versions.
 
+==== Double Q-Learning
+
+在估计 $Q$ 具有不确定性的情况下会累积出系统性的偏差：
+
+$
+EE [max_a Q (s, a)] >= max_a EE [Q (s, a)]
+$
+
+具体一点说，如果估计的 $Q$ 中存在噪声，先求最值再取平均的话平均过程无法消除最值选取中由于噪声导致的偏差，使得结果系统性高于先取平均再求最值的结果。对应到 Q-Learning 的实现中，我们每次取 Q 估计中的最大值构造目标样本进行更新，如果 Q 估计带有噪声最终就会产生偏差。
+
+Double Q-Learning 的解决方案是将选取最大值的过程和构造目标的过程隔离，即分开维护两个 Q 表，$Q'$ 用于最值选取，$Q$ 用于构造目标，使得：
+
+$
+EE [Q (s, arg max_a Q' (s, a))] approx max_a EE [Q (s, a)]
+$
+
+先前在 DQN 中引入了目标网络，算上原网络后天然就存在两个分开的网络。Deep Double Q-Learning（DDQN）用目标网络构造目标（$Q$），用原网络选取最优动作（$Q'$），在实践中有时会起到优化效果。
+
+==== Dueling Network Architectures
+
+可以利用优势函数，将网络架构从直接估计 Q 改为估计 V 和 A 的组合，即 $Q^pi (s, a) = V^pi (s) + A^pi (s, a)$，可以更高效地学习状态价值。具体的原因例如，在动作集较大的情况下样本对 V 进行的更新会同步影响所有动作。架构的分解方式不固定，常用的例如：
+
+$
+Q_theta (s, a) := V_theta (s) + (A_theta (s, a) - max_(a in cal(A)) A_theta (s, a))
+$
+
+$
+Q_theta (s, a) := V_theta (s) + (A_theta (s, a) - 1/abs(cal(A)) sum_(a in cal(A)) A_theta (s, a))
+$
+
 === Partial Observability and Deep Recurrent Q-Networks (DRQN)
 
-现实中经常会出现系统中状态 $s$ 不可观测的情况，考虑*部分可观马尔可夫决策过程*（partiall observable Markov decision process，POMDP），相比普通 MDP 加入了取决于状态的*观测*（observations）变量 $o_t ~ O(dot mid(|) s_t) in cal(O)$，轨迹变为：
+现实中经常会出现系统中状态 $s$ 不可观测的情况，考虑*部分可观马尔可夫决策过程*（partially observable Markov decision process，POMDP），相比普通 MDP 加入了取决于状态的*观测*（observations）变量 $o_t ~ O(dot mid(|) s_t) in cal(O)$，轨迹变为：
 
 $
 Tau := {O_0, A_0, R_0, O_1, dots, R_(t-1), O_t}

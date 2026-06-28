@@ -38,7 +38,7 @@ $
 
 类似 DQN 之于 Q-Learning，使用深度神经网络作为 DPG 的参数化模型，并加入一系列如经验重放缓存、目标网络和软目标更新、Batch-norm over inputs（BN）、加入噪声随机探索等提高稳定性和表现的技术，得到 DDPG。
 
-要实现 DPG 需要维护两个网络，一个是作为确定策略的 actor 网络 $bold(pi)_theta (s)$，一个是作为动作值函数估计的 critic 网络 $Q_(phi.alt) (s, bold(a))$。二者分别优化各自的损失函数，actor 优化：
+要实现 DPG 需要维护两个网络（不算目标网络），一个是作为确定策略的 actor 网络 $bold(pi)_theta (s)$，一个是作为动作值函数估计的 critic 网络 $Q_(phi.alt) (s, bold(a))$。二者分别优化各自的损失函数，actor 优化：
 
 $
 arg min_theta -EE_mu [sum_(t=0)^(n-1) gamma^t Q_(phi.alt) (S_t, bold(pi)_theta (S_t))]
@@ -86,12 +86,50 @@ for _ in range(max_updates):
 
 其中 `actor_t` 和 `critic_t` 是目标网络（target network），类似之前在 DQN 的示例中的使用，`.detach()` 阻断目标网络的梯度更新，`target_model_updates` 中可以具体实现目标网络的同步方式（如软更新）。这里的数据中用 `batch['discounts']` 存储了各条 transition 对应的 $gamma^t$。
 
+两个网络需要分别使用两个优化器进行优化，因为优化策略的 actor loss 中包含值函数网络 $bold(pi)_theta$，值函数网络的参数不应该受到策略更新的影响，我们不希望在 actor 优化时同时影响两个网络的参数。
+
 === Twin Delayed DDPG (TD3)
 
+类似之前对 Double Q-Learning 的讨论，DPG 也有一样的过估计问题：
 
+$
+EE [max_theta Q (s, bold(pi)_theta (s))] >= max_theta EE [Q(s, bold(pi)_theta (s))]
+$
+
+TD3 是表现最好的 DDPG 变体之一，其对 DDPG 作了一些补充。首先是 TD3 中的 "Twin"，引入 Clipped Double Q-Learning（CDQ），考虑维护两个 critic Q 网络，但和 Double Q-Learning 一个选取最优动作一个评估价值（构造目标）的思路不同，TD3 中这两个网络是平等的，使用时取其中较小的值，所以其实是一种保守估计方法，或者说 pessimistic 的。
+
+第二是 regularization with clipped noise，在更新 Q 网络时最小化 loss：
+
+$
+cal(L)_i^Q [phi.alt_i] = EE_mu [sum_(t=0)^(n-1) (R_t + gamma min_(j in {1,2}) Q_(phi.alt'_j) (S_(t+1), bold(pi)_(theta') (S_(t+1)) + bold(epsilon.alt)) - Q_(phi.alt_i) (S_t, S_t))^2]
+$
+
+其中 $bold(epsilon.alt) ~ "clip"(cal(N) (bold(0), bold(sigma)^2), -bold(c), bold(c)) in RR ^abs(cal(A))$，除了多了一个 Q 网络，区别就在于在策略上加了一个噪声（clip 以防太大），以平均掉一些确定策略下可能的单点尖峰错误的影响。
+
+第三是 TD3 中的 "Delayed"，critic 和 actor 不再同频率更新，而是 critic 更新多次后才更新一次 actor。这是由于 actor 的 loss 依赖 critic 的值函数估计，此举尝试让 critic 估计更稳定后再更新 actor。
+
+在谱图 @fig:policy_opt_spectrum 中，DDPG 和 TD3 属于 off-policy 确定策略算法，critic 估计动作值函数，并且采用 pessimism 估计稳定 Q 值估计。
 
 == Robust Decision Making
 
+#Cre("TODO")
+
+=== Regularization
+
+=== Robust Reinforcement Learning
+
+=== Planning as Inference
+
+=== Stochastic Policy Gradients (SPG) and Deterministic Policy Gradients (DPG)
+
+=== Reparameterization Trick
+
+
+
 == Maximum Entropy RL
 
+
+
 === Soft Actor-Critic (SAC)
+
+SAC 可以基于 TD3 的框架实现，具体地：1、使用重放缓冲、pessimism，但不用 clipped noise；2、
