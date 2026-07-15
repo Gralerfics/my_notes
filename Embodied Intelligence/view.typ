@@ -14,7 +14,7 @@
 )
 
 #show: ilm.with(
-    title: [Notes of Vision-Language-Action Model],
+    title: [Notes of Embodied Intelligence],
     author: "Gralerfics",
     // date: datetime(year: 2025, month: 10, day: 12),
     date: datetime.today(),
