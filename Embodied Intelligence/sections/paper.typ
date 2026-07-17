@@ -102,26 +102,24 @@ $pi_0$ 中将 tokens 划分为顺序的三部分（block）：image/language（p
 
 === 官方实现
 
-==== 位置编码 `posemb_sincos`
+// ==== 位置编码 `posemb_sincos`
 
-位置编码将一个位置信息 `pos`（函数中是一批）转换为一个 `embedding_dim` 维度的向量，常采用正余弦位置编码，向量的每一个元素（维度）分别从不同频率的正/余弦函数中采样得到。总之位置编码要求能区分不同位置，避免不同位置相似，同时维持一些位置的特征，例如连续性等，出于各种优势，正余弦位置编码中一半来自 sin 一半来自 cos。
+// 位置编码将一个位置信息 `pos`（函数中是一批）转换为一个 `embedding_dim` 维度的向量，常采用正余弦位置编码，向量的每一个元素（维度）分别从不同频率的正/余弦函数中采样得到。总之位置编码要求能区分不同位置，避免不同位置相似，同时维持一些位置的特征，例如连续性等，出于各种优势，正余弦位置编码中一半来自 sin 一半来自 cos。
 
-具体地，$pi_0$ 中先按给定的周期范围生成待采样的周期序列，一半 sin 一半 cos，指数间隔：
+// 具体地，$pi_0$ 中先按给定的周期范围生成待采样的周期序列，一半 sin 一半 cos，指数间隔：
 
-```
-fraction = jnp.linspace(0.0, 1.0, embedding_dim // 2)
-period = min_period * (max_period / min_period) ** fraction
-```
+// ```
+// fraction = jnp.linspace(0.0, 1.0, embedding_dim // 2)
+// period = min_period * (max_period / min_period) ** fraction
+// ```
 
-然后 `jnp.einsum("i,j->ij", pos, freq)` 等价于外积 `pos[:, None] * freq[None, :]`，外面套上 sin 和 cos，最后直接拼接在一起。
-
-==== #Cre("TODO")
+// 然后 `jnp.einsum("i,j->ij", pos, freq)` 等价于外积 `pos[:, None] * freq[None, :]`，外面套上 sin 和 cos，最后直接拼接在一起。
 
 详见代码注释
 
-=== 实验和结果
+==== #Cre("TODO")
 
-#Cre("TODO")
+
 
 #pagebreak()
 == Universal Manipulation Interface: In-The-Wild Robot Teaching Without In-The-Wild Robots
@@ -142,11 +140,19 @@ https://zhuanlan.zhihu.com/p/2003882878099014705
 
 文章也针对这些问题提出一些修改设计：
 
-1、改进物理接口，使其更适合人类示范采集（人类操作自然，同时也能采集足够信息供策略学习），文章用鱼眼摄像头提供更大的 field of view 及视觉上下文，在两侧放了两个反射镜提供隐式的双目信息。
+1、改进物理接口，使其更适合人类示范采集（人类操作自然，同时也能采集足够信息供策略学习），文章用鱼眼摄像头提供更大的 field of view 及视觉上下文，在两侧放了两个反射镜提供隐式的双目信息。顺便，我看这个双目信息不是提供工作空间的深度信息的，最多能帮助照到一些被夹爪挡住的物体，应该起不到特别决定性的作用。
 
 2、设计更好的 policy interface，即如何表示输入的观测和输出的动作。策略接口最好是硬件无关的（hardware-agnostic），即不和机器人状态空间强绑定。此外加入 inference-time latency matching（推理时延匹配）。还有使用 relative trajectory，不预测绝对位置而是预测相对当前位置的运动，更容易迁移。
 
 最后这套系统称为 universal manipulation interface（UMI）。
+
+=== Related Works
+
+==== Visual Demonstrations from Human Video
+
+文章提到用来自 Youtube 等的大量 in-the-wild video data 进行训练，这种数据中没有机器人动作标签，通常不直接行为克隆，而是先从中提取一些学习的中间信号。文章提到了一系列相关工作，这里简要总结一下：
+
+1、任务代价/奖励函数。
 
 #Cre("TODO")
 
